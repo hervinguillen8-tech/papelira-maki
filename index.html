@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Papelería Maki - Control de Stock e Ingresos (En Vivo)</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: #f4f6f9;
+      color: #333;
+      padding-bottom: 80px;
+    }
+
+    /* Header */
+    .navbar {
+      background-color: #0d6efd;
+      color: white;
+      text-align: center;
+      padding: 20px 15px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .navbar h1 span {
+      color: #ffc107;
+    }
+
+    .sync-status {
+      font-size: 0.8rem;
+      margin-top: 5px;
+      opacity: 0.9;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 0 15px;
+    }
+
+    /* Resumen Financiero e Inventario */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .dash-card {
+      background: white;
+      padding: 18px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      border-left: 5px solid #0d6efd;
+    }
+
+    .dash-card.green { border-left-color: #198754; }
+    .dash-card.orange { border-left-color: #fd7e14; }
+    .dash-card.purple { border-left-color: #6f42c1; }
+
+    .dash-card h4 {
+      font-size: 0.85rem;
+      color: #6c757d;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+
+    .dash-card .number {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #212529;
+    }
+
+    /* Barra de Control */
+    .admin-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-create {
+      background: #198754;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .btn-create:hover { background: #157347; }
+
+    .btn-toggle-inv {
+      background: #6f42c1;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    .btn-toggle-inv:hover { background: #59359a; }
+
+    .btn-history {
+      background: #fd7e14;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    /* Buscador */
+    .search-box {
+      width: 100%;
+      margin-bottom: 15px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 12px 15px;
+      border-radius: 8px;
+      border: 1px solid #ced4da;
+      font-size: 1rem;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    /* Categorías */
+    .category-menu {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    .cat-btn {
+      background: white;
+      border: 1px solid #0d6efd;
+      color: #0d6efd;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .cat-btn.active, .cat-btn:hover {
+      background: #0d6efd;
+      color: white;
+    }
+
+    /* Grilla de Productos */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .product-card {
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .product-icon {
+      font-size: 2.5rem;
+      margin-bottom: 5px;
+    }
+
+    .product-title {
+      font-size: 1rem;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .product-price {
+      color: #198754;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .product-stock {
+      font-size: 0.85rem;
+      color: #495057;
+      margin-bottom: 10px;
+      background: #e9ecef;
+      padding: 4px 8px;
+      border-radius: 6px;
+      display: inline-block;
+    }
+
+    .product-stock.out {
+      background: #f8d7da;
+      color: #842029;
+      font-weight: bold;
+    }
+
+    .card-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .add-btn {
+      background: #0d6efd;
+      color: white;
+      border: none;
+      padding: 8px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .add-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .sell-btn {
+      background: #198754;
+      color: white;
+      border: none;
+      padding: 8px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .edit-btn {
+      background: #ffc107;
+      color: #333;
+      border: none;
+      padding: 5px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .delete-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 5px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* Formulario */
+    .modal-form {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      margin-bottom: 25px;
+      display: none;
+    }
+
+    .modal-form h3 { color: #0d6efd; margin-bottom: 15px; }
+
+    .form-group {
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-group label { font-weight: bold; font-size: 0.9rem; }
+    .form-group input, .form-group select {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    .form-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    /* Tabla de Inventario Detallado */
+    .inventory-section {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      margin-bottom: 30px;
+      display: none;
+    }
+
+    .inventory-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .inventory-section h2 { color: #0d6efd; margin: 0; }
+
+    .table-responsive { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 12px 10px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    th { background-color: #f8f9fa; color: #495057; font-size: 0.9rem; }
+
+    /* Cotizador */
+    .calculator-section {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      margin-bottom: 30px;
+    }
+
+    .calculator-section h2 { color: #0d6efd; margin-bottom: 15px; }
+    .calc-box { display: flex; flex-direction: column; gap: 12px; }
+
+    /* Carrito */
+    .cart-section {
+      background: #e9ecef;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+    }
+
+    .cart-items { list-style: none; margin-bottom: 15px; }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .cart-total {
+      font-size: 1.2rem;
+      font-weight: bold;
+      text-align: right;
+      color: #198754;
+      margin-bottom: 15px;
+    }
+
+    /* Calculadora de Cambio */
+    .change-box {
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border: 1px solid #ced4da;
+    }
+
+    .change-box label { font-weight: bold; font-size: 0.9rem; }
+
+    .change-display {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #0d6efd;
+    }
+
+    /* Botones de Operación */
+    .ws-buttons { display: flex; flex-direction: column; gap: 10px; }
+
+    .ws-btn {
+      background-color: #25d366;
+      color: white;
+      padding: 12px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 1rem;
+      text-align: center;
+      border: none;
+      cursor: pointer;
+    }
+
+    .ws-btn:hover { background-color: #1ebd56; }
+
+    .btn-ticket {
+      background-color: #0dcaf0;
+      color: #000;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #212529;
+      color: white;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <h1>Papelería <span>Maki</span></h1>
+    <p>Control de Inventarios, Unidades y Ventas Directas</p>
+    <div class="sync-status" id="sync-status">🟢 Conectado en Tiempo Real</div>
+  </header>
+
+  <main class="container">
+
+    <!-- Panel de Métricas -->
+    <div class="dashboard-grid">
+      <div class="dash-card orange">
+        <h4>Tipos de Productos</h4>
+        <div class="number" id="dash-prod-count">0</div>
+      </div>
+      <div class="dash-card purple">
+        <h4>Total Unidades en Stock</h4>
+        <div class="number" id="dash-total-units">0 pzs</div>
+      </div>
+      <div class="dash-card">
+        <h4>Valor Total Inventario</h4>
+        <div class="number" id="dash-inventory-val">$0.00</div>
+      </div>
+      <div class="dash-card green">
+        <h4>Ingresos del Día</h4>
+        <div class="number" id="dash-income-total">$0.00</div>
+      </div>
+    </div>
+
+    <!-- Barra de Control -->
+    <div class="admin-bar">
+      <h2 style="color: #0d6efd;">Catálogo y Servicios</h2>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn-toggle-inv" onclick="toggleInventoryTable()">📋 Tabla de Stock</button>
+        <button class="btn-history" onclick="toggleHistoryTable()">📜 Historial / Cierre</button>
+        <button class="btn-create" onclick="toggleForm()">➕ Nuevo Item</button>
+      </div>
+    </div>
+
+    <!-- Buscador en tiempo real -->
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="🔍 Buscar producto o servicio (ej: carpeta, agua, imss)..." oninput="renderProducts()">
+    </div>
+
+    <!-- Formulario para Agregar Producto / Servicio -->
+    <div class="modal-form" id="new-product-form">
+      <h3>Nuevo Producto o Servicio</h3>
+      <div class="form-group">
+        <label>Nombre:</label>
+        <input type="text" id="prod-name" placeholder="Ej: Pago de Luz, Memoria USB">
+      </div>
+      <div class="form-group">
+        <label>Precio Unitario ($):</label>
+        <input type="number" id="prod-price" placeholder="0.00" step="0.50">
+      </div>
+      <div class="form-group">
+        <label>Cantidad en Stock (Para servicios usar 999):</label>
+        <input type="number" id="prod-stock" value="16" min="0">
+      </div>
+      <div class="form-group">
+        <label>Categoría:</label>
+        <select id="prod-category">
+          <option value="papeleria">Papelería</option>
+          <option value="servicios">Servicios / Copias</option>
+          <option value="computo">Cómputo / Accesorios</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Selecciona un Icono / Emoji:</label>
+        <select id="prod-icon">
+          <option value="💧">💧 Recibo de Agua</option>
+          <option value="💡">💡 Recibo de Luz</option>
+          <option value="🧾">🧾 Talón de Pago / Comprobante</option>
+          <option value="🆔">🆔 CURP / Identificación</option>
+          <option value="🎵">🎵 Música / Audio</option>
+          <option value="📄">📄 Documento / Copia</option>
+          <option value="📁">📁 Carpeta / Archivero</option>
+          <option value="🖊️">🖊️ Pluma / Lapicero</option>
+          <option value="✏️">✏️ Lápiz / Mina</option>
+          <option value="📓">📓 Libreta / Cuaderno</option>
+          <option value="🧮">🧮 Calculadora</option>
+          <option value="🖨️">🖨️ Impresión</option>
+          <option value="💾">💾 USB / Memoria</option>
+        </select>
+      </div>
+      <div class="form-buttons">
+        <button class="btn-create" onclick="saveNewProduct()">Guardar Item</button>
+        <button class="delete-btn" onclick="toggleForm()" style="padding: 10px;">Cancelar</button>
+      </div>
+    </div>
+
+    <!-- Categorías -->
+    <div class="category-menu">
+      <button class="cat-btn active" onclick="filterCategory('todos', event)">Todos</button>
+      <button class="cat-btn" onclick="filterCategory('papeleria', event)">Papelería</button>
+      <button class="cat-btn" onclick="filterCategory('servicios', event)">Servicios / Copias</button>
+      <button class="cat-btn" onclick="filterCategory('computo', event)">Cómputo / Accesorios</button>
+    </div>
+
+    <!-- Contenedor del Catálogo -->
+    <div class="products-grid" id="products-container"></div>
+
+    <!-- Tabla de Control de Inventario -->
+    <section class="inventory-section" id="inventory-table-section">
+      <div class="inventory-header">
+        <h2>📋 Control de Existencias e Inventario</h2>
+        <button class="delete-btn" style="padding: 6px 12px;" onclick="toggleInventoryTable()">✕ Cerrar</button>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Icono</th>
+              <th>Producto / Servicio</th>
+              <th>Categoría</th>
+              <th>Precio Unitario</th>
+              <th>Stock Disponible</th>
+              <th>Valor Acumulado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="inventory-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Historial de Ventas y Cierre de Caja -->
+    <section class="inventory-section" id="history-table-section">
+      <div class="inventory-header">
+        <h2>📜 Historial de Ventas y Cierre de Caja</h2>
+        <button class="delete-btn" style="padding: 6px 12px;" onclick="toggleHistoryTable()">✕ Cerrar</button>
+      </div>
+      <div class="table-responsive" style="margin-bottom: 15px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Hora / Fecha</th>
+              <th>Detalle de Productos</th>
+              <th>Total Cobrado</th>
+            </tr>
+          </thead>
+          <tbody id="history-table-body"></tbody>
+        </table>
+      </div>
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button class="btn-create" onclick="downloadReport()">📥 Descargar Reporte (.txt)</button>
+        <button class="delete-btn" style="padding: 10px;" onclick="closeShift()">🔒 Cerrar Caja del Día</button>
+      </div>
+    </section>
+
+    <!-- Cotizador -->
+    <section class="calculator-section">
+      <h2>Cotizador de Impresiones / Copias</h2>
+      <div class="calc-box">
+        <div class="form-group">
+          <label for="page-type">Tipo de trabajo:</label>
+          <select id="page-type">
+            <option value="2">Copia / Impresión B/N ($2.00)</option>
+            <option value="5">Impresión Color ($5.00)</option>
+            <option value="10">Fotográfico A4 ($10.00)</option>
+            <option value="15">Engargolado ($15.00)</option>
+            <option value="20">Enmicado ($20.00)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="page-count">Cantidad:</label>
+          <input type="number" id="page-count" value="1" min="1">
+        </div>
+
+        <button class="add-btn" onclick="addPrintToCart()">+ Agregar Trabajo al Carrito</button>
+      </div>
+    </section>
+
+    <!-- Carrito -->
+    <section class="cart-section">
+      <h2>🛒 Pedido Actual</h2>
+      <ul class="cart-items" id="cart-items-list">
+        <li style="color: #6c757d;">No has agregado productos aún.</li>
+      </ul>
+      <div class="cart-total">Total: $<span id="cart-total-price">0.00</span></div>
+
+      <!-- Calculadora de Cambio -->
+      <div class="change-box">
+        <label>Efectivo Recibido ($):</label>
+        <input type="number" id="cash-received" placeholder="Ej: 100, 200, 500" oninput="calculateChange()">
+        <div class="change-display">Cambio a Entregar: $<span id="change-amount">0.00</span></div>
+      </div>
+
+      <div class="ws-buttons">
+        <button class="sell-btn" style="font-size: 1.1rem; padding: 12px;" onclick="checkoutDirectSale()">🛍️ Registrar Venta Directa en Mostrador</button>
+        <button class="btn-ticket" onclick="printTicket()">🧾 Imprimir / Generar Ticket de Venta</button>
+        <button class="ws-btn" onclick="sendWhatsApp('529614402234')">💬 Enviar a WhatsApp 1 (961 440 2234)</button>
+        <button class="ws-btn" style="background-color: #128c7e;" onclick="sendWhatsApp('529614495630')">💬 Enviar a WhatsApp 2 (961 449 5630)</button>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Papelería Maki. Todos los derechos reservados.</p>
+  </footer>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script>
+    // ⚙️ INSTRUCCIONES: Reemplaza este objeto con tus datos de Firebase Console
+    const firebaseConfig = {
+      apiKey: "TU_API_KEY",
+      authDomain: "tu-proyecto.firebaseapp.com",
+      databaseURL: "https://tu-proyecto-default-rtdb.firebaseio.com",
+      projectId: "tu-proyecto",
+      storageBucket: "tu-proyecto.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abcdef"
+    };
+
+    // Inicializar Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let defaultProducts = [
+      { id: 101, name: "Carpeta de Argollas", price: 50.00, stock: 16, category: "papeleria", icon: "📁" },
+      { id: 102, name: "Cuaderno Profesional", price: 35.00, stock: 25, category: "papeleria", icon: "📓" },
+      { id: 103, name: "Lápiz HB #2", price: 5.00, stock: 50, category: "papeleria", icon: "✏️" },
+      { id: 104, name: "Lapicero Tinta Azul", price: 8.00, stock: 40, category: "papeleria", icon: "🖊️" },
+      { id: 105, name: "Tijeras Escolares", price: 20.00, stock: 12, category: "papeleria", icon: "✂️" },
+      { id: 201, name: "Recibo de Agua / Luz", price: 25.00, stock: 999, category: "servicios", icon: "💡" },
+      { id: 202, name: "Talón de Pago ISSTECH", price: 15.00, stock: 999, category: "servicios", icon: "🧾" },
+      { id: 203, name: "Talón de Pago IMSS", price: 15.00, stock: 999, category: "servicios", icon: "🧾" },
+      { id: 204, name: "Talón de Pago ISSSTE", price: 15.00, stock: 999, category: "servicios", icon: "🧾" },
+      { id: 205, name: "Imprimir / Descargar CURP", price: 10.00, stock: 999, category: "servicios", icon: "🆔" },
+      { id: 206, name: "Descargar Música (mp3)", price: 3.00, stock: 999, category: "servicios", icon: "🎵" },
+      { id: 207, name: "Escaneo Documento PDF", price: 5.00, stock: 999, category: "servicios", icon: "📄" },
+      { id: 301, name: "Memoria USB 32GB", price: 120.00, stock: 5, category: "computo", icon: "💾" }
+    ];
+
+    let products = [];
+    let totalIncome = 0;
+    let salesHistory = [];
+    let cart = [];
+    let currentCategory = 'todos';
+
+    // Guardar en la Nube
+    function syncToCloud() {
+      db.ref('maki_app').set({
+        products: products,
+        income: totalIncome,
+        history: salesHistory
+      });
+    }
+
+    // Escuchar cambios en la Nube (Tiempo Real)
+    db.ref('maki_app').on('value', (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        products = data.products || [];
+        totalIncome = data.income || 0;
+        salesHistory = data.history || [];
+      } else {
+        // Cargar por primera vez si la base de datos está vacía
+        products = defaultProducts;
+        totalIncome = 0;
+        salesHistory = [];
+        syncToCloud();
+      }
+      renderProducts();
+      renderHistory();
+      document.getElementById('sync-status').textContent = "🟢 Conectado en Tiempo Real";
+    }, (error) => {
+      document.getElementById('sync-status').textContent = "🔴 Error de Conexión";
+    });
+
+    function updateDashboard() {
+      document.getElementById('dash-prod-count').textContent = products.length;
+
+      const totalUnits = products.reduce((sum, item) => sum + Number(item.stock), 0);
+      document.getElementById('dash-total-units').textContent = `${totalUnits} pzs`;
+
+      const totalValue = products.reduce((sum, item) => sum + (Number(item.price) * Number(item.stock)), 0);
+      document.getElementById('dash-inventory-val').textContent = `$${totalValue.toFixed(2)}`;
+
+      document.getElementById('dash-income-total').textContent = `$${totalIncome.toFixed(2)}`;
+    }
+
+    function toggleForm() {
+      const form = document.getElementById('new-product-form');
+      form.style.display = form.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function toggleInventoryTable() {
+      const section = document.getElementById('inventory-table-section');
+      section.style.display = (section.style.display === 'none' || section.style.display === '') ? 'block' : 'none';
+    }
+
+    function toggleHistoryTable() {
+      const section = document.getElementById('history-table-section');
+      section.style.display = (section.style.display === 'none' || section.style.display === '') ? 'block' : 'none';
+      renderHistory();
+    }
+
+    function saveNewProduct() {
+      const name = document.getElementById('prod-name').value;
+      const price = parseFloat(document.getElementById('prod-price').value);
+      const stock = parseInt(document.getElementById('prod-stock').value) || 0;
+      const category = document.getElementById('prod-category').value;
+      const icon = document.getElementById('prod-icon').value;
+
+      if (!name || isNaN(price)) {
+        alert("Por favor escribe el nombre y un precio válido.");
+        return;
+      }
+
+      const newProd = { id: Date.now(), name, price, stock, category, icon };
+      products.push(newProd);
+      syncToCloud();
+      
+      document.getElementById('prod-name').value = '';
+      document.getElementById('prod-price').value = '';
+      document.getElementById('prod-stock').value = '16';
+      toggleForm();
+    }
+
+    function editStock(id) {
+      const prod = products.find(p => Number(p.id) === Number(id));
+      if (prod) {
+        const newStock = prompt(`Actualizar unidades en stock de "${prod.name}":`, prod.stock);
+        if (newStock !== null && !isNaN(parseInt(newStock))) {
+          prod.stock = parseInt(newStock);
+          syncToCloud();
+        }
+      }
+    }
+
+    function editPrice(id) {
+      const prod = products.find(p => Number(p.id) === Number(id));
+      if (prod) {
+        const newPrice = prompt(`Nuevo precio para "${prod.name}":`, prod.price);
+        if (newPrice !== null && !isNaN(parseFloat(newPrice))) {
+          prod.price = parseFloat(newPrice);
+          syncToCloud();
+        }
+      }
+    }
+
+    function deleteProduct(id) {
+      if (confirm("¿Seguro que quieres eliminar este elemento del catálogo?")) {
+        products = products.filter(p => Number(p.id) !== Number(id));
+        syncToCloud();
+      }
+    }
+
+    function renderProducts() {
+      const container = document.getElementById('products-container');
+      const tableBody = document.getElementById('inventory-table-body');
+      const searchTerm = document.getElementById('search-input').value.toLowerCase();
+      
+      container.innerHTML = '';
+      tableBody.innerHTML = '';
+
+      const filtered = products.filter(p => {
+        const matchesCategory = (currentCategory === 'todos' || p.category === currentCategory);
+        const matchesSearch = p.name.toLowerCase().includes(searchTerm);
+        return matchesCategory && matchesSearch;
+      });
+
+      // Render Tarjetas
+      filtered.forEach(product => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        const isOut = product.stock <= 0;
+        
+        card.innerHTML = `
+          <div class="product-icon">${product.icon}</div>
+          <div class="product-title">${product.name}</div>
+          <div class="product-price">$${Number(product.price).toFixed(2)}</div>
+          <div class="product-stock ${isOut ? 'out' : ''}">${isOut ? 'Agotado' : (product.category === 'servicios' ? 'Servicio Disponible' : 'Stock: ' + product.stock + ' pzs')}</div>
+          <div class="card-actions">
+            <button class="add-btn" onclick="addToCart(${product.id})" ${isOut ? 'disabled' : ''}>+ Agregar</button>
+            <button class="edit-btn" onclick="editStock(${product.id})">📦 Stock</button>
+            <button class="delete-btn" onclick="deleteProduct(${product.id})">🗑️ Borrar</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      // Render Tabla Detallada
+      products.forEach(product => {
+        const tr = document.createElement('tr');
+        const accumulatedVal = Number(product.price) * Number(product.stock);
+        
+        tr.innerHTML = `
+          <td style="font-size: 1.5rem;">${product.icon}</td>
+          <td style="font-weight: bold;">${product.name}</td>
+          <td style="text-transform: capitalize;">${product.category}</td>
+          <td style="color: #198754; font-weight: bold;">$${Number(product.price).toFixed(2)}</td>
+          <td style="font-weight: bold;">${product.stock} unidades</td>
+          <td style="color: #0d6efd; font-weight: bold;">$${accumulatedVal.toFixed(2)}</td>
+          <td>
+            <button class="edit-btn" onclick="editStock(${product.id})">📦 Stock</button>
+            <button class="edit-btn" onclick="editPrice(${product.id})">✏️ Precio</button>
+            <button class="delete-btn" onclick="deleteProduct(${product.id})">🗑️ Borrar</button>
+          </td>
+        `;
+        tableBody.appendChild(tr);
+      });
+
+      updateDashboard();
+    }
+
+    function renderHistory() {
+      const tableBody = document.getElementById('history-table-body');
+      tableBody.innerHTML = '';
+
+      if (salesHistory.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#6c757d;">No hay ventas registradas el día de hoy.</td></tr>';
+        return;
+      }
+
+      salesHistory.slice().reverse().forEach(sale => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-size: 0.85rem; color:#495057;">${sale.date}</td>
+          <td>${sale.items.join(', ')}</td>
+          <td style="color: #198754; font-weight: bold;">$${sale.total.toFixed(2)}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    function filterCategory(cat, e) {
+      currentCategory = cat;
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      renderProducts();
+    }
+
+    function addToCart(prodId) {
+      const prod = products.find(p => Number(p.id) === Number(prodId));
+      if (!prod) return;
+
+      const currentInCart = cart.filter(item => Number(item.prodId) === Number(prodId)).length;
+      
+      if (prod.stock <= currentInCart) {
+        alert(`No hay más unidades suficientes en stock de "${prod.name}".`);
+        return;
+      }
+
+      cart.push({ prodId: prod.id, name: prod.name, price: Number(prod.price) });
+      updateCartUI();
+    }
+
+    function addPrintToCart() {
+      const select = document.getElementById('page-type');
+      const optionName = select.options[select.selectedIndex].text.split(' ($')[0];
+      const unitPrice = parseFloat(select.value);
+      const count = parseInt(document.getElementById('page-count').value) || 1;
+
+      const totalPrice = unitPrice * count;
+      cart.push({ prodId: null, name: `${optionName} (${count} uds)`, price: totalPrice });
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      const list = document.getElementById('cart-items-list');
+      const totalDisplay = document.getElementById('cart-total-price');
+
+      if (cart.length === 0) {
+        list.innerHTML = '<li style="color: #6c757d;">No has agregado productos aún.</li>';
+        totalDisplay.textContent = '0.00';
+        calculateChange();
+        return;
+      }
+
+      list.innerHTML = '';
+      let total = 0;
+
+      cart.forEach((item, index) => {
+        total += item.price;
+        const li = document.createElement('li');
+        li.className = 'cart-item';
+        li.innerHTML = `
+          <span>${item.name}</span>
+          <span>$${item.price.toFixed(2)} <button onclick="removeFromCart(${index})" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">✕</button></span>
+        `;
+        list.appendChild(li);
+      });
+
+      totalDisplay.textContent = total.toFixed(2);
+      calculateChange();
+    }
+
+    function calculateChange() {
+      const total = cart.reduce((sum, item) => sum + item.price, 0);
+      const cash = parseFloat(document.getElementById('cash-received').value) || 0;
+      const change = cash - total;
+      
+      const changeDisplay = document.getElementById('change-amount');
+      if (cash > 0 && change >= 0) {
+        changeDisplay.textContent = change.toFixed(2);
+        changeDisplay.style.color = '#198754';
+      } else if (cash > 0 && change < 0) {
+        changeDisplay.textContent = 'Faltan $' + Math.abs(change).toFixed(2);
+        changeDisplay.style.color = '#dc3545';
+      } else {
+        changeDisplay.textContent = '0.00';
+        changeDisplay.style.color = '#0d6efd';
+      }
+    }
+
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      updateCartUI();
+    }
+
+    function processDeductions() {
+      let totalSale = 0;
+      let itemsList = [];
+      
+      cart.forEach(item => {
+        totalSale += item.price;
+        itemsList.push(item.name);
+        if (item.prodId !== null) {
+          const prod = products.find(p => Number(p.id) === Number(item.prodId));
+          if (prod && prod.stock > 0) {
+            prod.stock -= 1;
+          }
+        }
+      });
+
+      totalIncome += totalSale;
+
+      // Registrar historial
+      const now = new Date();
+      salesHistory.push({
+        date: now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+        items: itemsList,
+        total: totalSale
+      });
+
+      cart = [];
+      document.getElementById('cash-received').value = '';
+      syncToCloud();
+      updateCartUI();
+      return totalSale;
+    }
+
+    function checkoutDirectSale() {
+      if (cart.length === 0) {
+        alert('Agrega al menos un producto o servicio para registrar una venta.');
+        return;
+      }
+
+      const amount = processDeductions();
+      alert(`✅ ¡Venta registrada con éxito!\nSe cobraron $${amount.toFixed(2)} y se actualizó en tiempo real.`);
+    }
+
+    function printTicket() {
+      if (cart.length === 0) {
+        alert('No hay productos en el carrito para imprimir un ticket.');
+        return;
+      }
+
+      const now = new Date();
+      const cash = parseFloat(document.getElementById('cash-received').value) || 0;
+      let total = 0;
+
+      let ticketContent = `
+        <div style="font-family: monospace; width: 280px; padding: 10px;">
+          <h2 style="text-align: center; margin-bottom: 2px;">PAPELERÍA MAKI</h2>
+          <p style="text-align: center; font-size: 0.8rem; margin-bottom: 10px;">Ticket de Venta Directa<br>${now.toLocaleDateString()} ${now.toLocaleTimeString()}</p>
+          <hr style="border-top: 1px dashed #000;">
+      `;
+
+      cart.forEach(item => {
+        total += item.price;
+        ticketContent += `
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin: 4px 0;">
+            <span>${item.name}</span>
+            <span>$${item.price.toFixed(2)}</span>
+          </div>
+        `;
+      });
+
+      const change = cash > 0 ? (cash - total) : 0;
+
+      ticketContent += `
+          <hr style="border-top: 1px dashed #000;">
+          <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1rem; margin-top: 5px;">
+            <span>TOTAL:</span>
+            <span>$${total.toFixed(2)}</span>
+          </div>
+          ${cash > 0 ? `
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-top: 3px;">
+            <span>Efectivo:</span>
+            <span>$${cash.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+            <span>Cambio:</span>
+            <span>$${change.toFixed(2)}</span>
+          </div>` : ''}
+          <p style="text-align: center; margin-top: 15px; font-size: 0.8rem;">¡Gracias por su compra!</p>
+        </div>
+      `;
+
+      processDeductions();
+
+      const printWin = window.open('', '_blank', 'width=350,height=500');
+      printWin.document.write(`<html><head><title>Ticket de Venta</title></head><body>${ticketContent}</body></html>`);
+      printWin.document.close();
+      printWin.focus();
+      printWin.print();
+      printWin.close();
+    }
+
+    function sendWhatsApp(phoneNumber) {
+      if (cart.length === 0) {
+        alert('Agrega al menos un producto al carrito para enviar el pedido por WhatsApp.');
+        return;
+      }
+
+      let message = "🛒 *Nuevo Pedido - Papelería Maki*\n\n";
+      let total = 0;
+
+      cart.forEach(item => {
+        message += `• ${item.name}: $${item.price.toFixed(2)}\n`;
+        total += item.price;
+      });
+
+      message += `\n*Total a Pagar:* $${total.toFixed(2)}`;
+
+      const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+      window.open(url, '_blank');
+    }
+
+    function downloadReport() {
+      if (salesHistory.length === 0) {
+        alert('No hay ventas registradas para generar el reporte.');
+        return;
+      }
+
+      let reportText = `========================================\n`;
+      reportText += `   PAPELERÍA MAKI - REPORTE DE VENTAS   \n`;
+      reportText += `   Fecha: ${new Date().toLocaleDateString()}\n`;
+      reportText += `========================================\n\n`;
+
+      salesHistory.forEach((sale, index) => {
+        reportText += `Venta #${index + 1} - [${sale.date}]\n`;
+        reportText += `Artículos: ${sale.items.join(', ')}\n`;
+        reportText += `Total: $${sale.total.toFixed(2)}\n`;
+        reportText += `----------------------------------------\n`;
+      });
+
+      reportText += `\nINGRESOS TOTALES DEL DÍA: $${totalIncome.toFixed(2)}\n`;
+
+      const blob = new Blob([reportText], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `Reporte_Ventas_Maki_${new Date().toISOString().slice(0, 10)}.txt`;
+      a.click();
+    }
+
+    function closeShift() {
+      if (confirm(`¿Estás seguro de cerrar la caja del día?\n\nTotal acumulado: $${totalIncome.toFixed(2)}\n\nEsto reiniciará los ingresos del día e historial a $0.00.`)) {
+        totalIncome = 0;
+        salesHistory = [];
+        syncToCloud();
+        alert('🔒 Caja cerrada exitosamente. Los registros del día se han reiniciado.');
+      }
+    }
+  </script>
+</body>
+</html>
