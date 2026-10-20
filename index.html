@@ -17,9 +17,10 @@
     }
 
     body {
-      background-color: #f4f6f9;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
       color: #333;
       padding-bottom: 80px;
+      min-height: 100vh;
     }
 
     /* Modales de Acceso */
@@ -40,39 +41,44 @@
     .modal-card {
       background: white;
       padding: 25px;
-      border-radius: 12px;
+      border-radius: 16px;
       width: 100%;
       max-width: 380px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
     }
 
     .modal-card h2 {
-      color: #0d6efd;
+      color: #4e54c8;
       margin-bottom: 15px;
-      font-size: 1.3rem;
+      font-size: 1.4rem;
       text-align: center;
     }
 
-    /* Header */
+    /* Header con Colorido Gradiente */
     .navbar {
-      background-color: #0d6efd;
+      background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
       color: white;
       text-align: center;
-      padding: 20px 15px;
+      padding: 22px 15px;
       position: sticky;
       top: 0;
       z-index: 100;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 15px rgba(78,84,200,0.3);
     }
 
     .navbar h1 span {
-      color: #ffc107;
+      color: #ffd700;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
     .sync-status {
       font-size: 0.8rem;
-      margin-top: 5px;
-      opacity: 0.9;
+      margin-top: 6px;
+      opacity: 0.95;
+      background: rgba(255,255,255,0.2);
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
     }
 
     .container {
@@ -92,12 +98,14 @@
     .dash-card {
       background: white;
       padding: 18px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      border-left: 5px solid #0d6efd;
+      border-radius: 14px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.06);
+      border-left: 6px solid #4e54c8;
+      transition: transform 0.2s;
     }
+    .dash-card:hover { transform: translateY(-3px); }
 
-    .dash-card.green { border-left-color: #198754; }
+    .dash-card.green { border-left-color: #28a745; }
     .dash-card.orange { border-left-color: #fd7e14; }
     .dash-card.purple { border-left-color: #6f42c1; }
 
@@ -106,10 +114,11 @@
       color: #6c757d;
       margin-bottom: 5px;
       text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .dash-card .number {
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       font-weight: bold;
       color: #212529;
     }
@@ -117,9 +126,9 @@
     /* Barra de Control */
     .admin-bar {
       background: white;
-      padding: 15px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      padding: 18px;
+      border-radius: 14px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.06);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -135,23 +144,25 @@
     }
 
     .btn-action {
-      background: #0d6efd;
+      background: #4e54c8;
       color: white;
       border: none;
-      padding: 10px 16px;
-      border-radius: 8px;
+      padding: 10px 18px;
+      border-radius: 10px;
       font-weight: bold;
       cursor: pointer;
       font-size: 0.9rem;
+      box-shadow: 0 4px 10px rgba(78,84,200,0.2);
+      transition: all 0.2s;
     }
-    .btn-action:hover { opacity: 0.9; }
+    .btn-action:hover { opacity: 0.95; transform: translateY(-2px); }
 
-    .btn-create { background: #198754; }
-    .btn-history { background: #fd7e14; }
-    .btn-users { background: #0dcaf0; color: #000; }
-    .btn-excel { background: #20c997; }
+    .btn-create { background: #28a745; box-shadow: 0 4px 10px rgba(40,167,69,0.2); }
+    .btn-users { background: #17a2b8; color: white; box-shadow: 0 4px 10px rgba(23,162,184,0.2); }
+    .btn-excel { background: #20c997; box-shadow: 0 4px 10px rgba(32,201,151,0.2); }
+    .btn-logout { background: #dc3545; box-shadow: 0 4px 10px rgba(220,53,69,0.2); }
 
-    /* Buscador */
+    /* Buscador Colorido */
     .search-box {
       width: 100%;
       margin-bottom: 15px;
@@ -159,17 +170,23 @@
 
     .search-box input {
       width: 100%;
-      padding: 12px 15px;
-      border-radius: 8px;
-      border: 1px solid #ced4da;
+      padding: 14px 18px;
+      border-radius: 12px;
+      border: 2px solid #e0e4ef;
       font-size: 1rem;
-      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+      background: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+      transition: border-color 0.2s;
+    }
+    .search-box input:focus {
+      outline: none;
+      border-color: #4e54c8;
     }
 
-    /* Categorías */
+    /* Categorías Coloridas */
     .category-menu {
       display: flex;
-      gap: 10px;
+      gap: 12px;
       overflow-x: auto;
       padding-bottom: 10px;
       margin-bottom: 20px;
@@ -177,153 +194,178 @@
 
     .cat-btn {
       background: white;
-      border: 1px solid #0d6efd;
-      color: #0d6efd;
-      padding: 8px 16px;
-      border-radius: 20px;
+      border: 2px solid #e0e4ef;
+      color: #4e54c8;
+      padding: 10px 20px;
+      border-radius: 25px;
       font-weight: bold;
       cursor: pointer;
       white-space: nowrap;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+      transition: all 0.2s;
     }
 
     .cat-btn.active, .cat-btn:hover {
-      background: #0d6efd;
+      background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
       color: white;
+      border-color: transparent;
+      box-shadow: 0 6px 15px rgba(78,84,200,0.3);
     }
 
-    /* Grilla de Productos */
+    /* Grilla de Productos con Estilo Vibrante */
     .products-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-      gap: 15px;
+      gap: 18px;
       margin-bottom: 30px;
     }
 
     .product-card {
       background: white;
-      border-radius: 12px;
-      padding: 15px;
+      border-radius: 16px;
+      padding: 18px;
       text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .product-card:hover {
+      border-color: #8f94fb;
+      transform: translateY(-4px);
     }
 
     .product-icon {
-      font-size: 2.5rem;
-      margin-bottom: 5px;
+      font-size: 2.8rem;
+      margin-bottom: 8px;
     }
 
     .product-title {
-      font-size: 1rem;
+      font-size: 1.05rem;
       font-weight: bold;
-      margin-bottom: 5px;
+      margin-bottom: 6px;
+      color: #2c3e50;
     }
 
     .product-price {
-      color: #198754;
+      color: #28a745;
       font-weight: bold;
-      font-size: 1.1rem;
+      font-size: 1.2rem;
+      margin-bottom: 6px;
     }
 
     .product-stock {
       font-size: 0.85rem;
       color: #495057;
-      margin-bottom: 10px;
-      background: #e9ecef;
-      padding: 4px 8px;
-      border-radius: 6px;
+      margin-bottom: 12px;
+      background: #f1f3f9;
+      padding: 5px 10px;
+      border-radius: 8px;
       display: inline-block;
+      font-weight: 500;
     }
 
     .product-stock.out {
-      background: #f8d7da;
-      color: #842029;
+      background: #ffe3e3;
+      color: #c92a2a;
       font-weight: bold;
     }
 
     .card-actions {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
 
     .add-btn {
-      background: #0d6efd;
+      background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
       color: white;
       border: none;
-      padding: 10px;
-      border-radius: 8px;
+      padding: 12px;
+      border-radius: 10px;
       font-weight: bold;
       cursor: pointer;
-      font-size: 0.95rem;
+      font-size: 1rem;
+      box-shadow: 0 4px 12px rgba(78,84,200,0.3);
+      transition: opacity 0.2s;
     }
+    .add-btn:hover { opacity: 0.9; }
 
     .add-btn:disabled {
-      background: #ccc;
+      background: #ced4da;
+      box-shadow: none;
       cursor: not-allowed;
     }
 
     .sell-btn {
-      background: #198754;
+      background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);
       color: white;
       border: none;
-      padding: 12px;
-      border-radius: 8px;
+      padding: 14px;
+      border-radius: 12px;
       font-weight: bold;
       cursor: pointer;
       font-size: 1.1rem;
       width: 100%;
+      box-shadow: 0 4px 15px rgba(40,167,69,0.3);
     }
 
     .edit-btn {
       background: #ffc107;
       color: #333;
       border: none;
-      padding: 6px;
-      border-radius: 6px;
+      padding: 8px;
+      border-radius: 8px;
       font-size: 0.85rem;
       font-weight: bold;
       cursor: pointer;
+      box-shadow: 0 2px 6px rgba(255,193,7,0.3);
     }
 
     .delete-btn {
       background: #dc3545;
       color: white;
       border: none;
-      padding: 6px;
-      border-radius: 6px;
+      padding: 8px;
+      border-radius: 8px;
       font-size: 0.85rem;
       font-weight: bold;
       cursor: pointer;
+      box-shadow: 0 2px 6px rgba(220,53,69,0.3);
     }
 
     /* Cajones Plegables */
     .modal-form {
       background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
       margin-bottom: 25px;
       display: none;
-      border-top: 4px solid #0d6efd;
+      border-top: 5px solid #4e54c8;
     }
 
-    .modal-form h3 { color: #0d6efd; margin-bottom: 15px; }
+    .modal-form h3 { color: #4e54c8; margin-bottom: 15px; }
 
     .form-group {
-      margin-bottom: 12px;
+      margin-bottom: 15px;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 6px;
     }
 
-    .form-group label { font-weight: bold; font-size: 0.9rem; }
+    .form-group label { font-weight: bold; font-size: 0.9rem; color: #495057; }
     .form-group input, .form-group select {
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+      padding: 12px;
+      border: 2px solid #e0e4ef;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: #4e54c8;
     }
 
     .form-buttons {
@@ -339,77 +381,84 @@
       margin-bottom: 15px;
     }
 
-    /* Cotizador y Carrito */
+    /* Cotizador y Carrito Colorido */
     .calculator-section {
       background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      margin-bottom: 30px;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+      margin-bottom: 25px;
+      border-left: 5px solid #ffc107;
     }
 
-    .calculator-section h2 { color: #0d6efd; margin-bottom: 15px; }
+    .calculator-section h2 { color: #d39e00; margin-bottom: 15px; }
     .calc-box { display: flex; flex-direction: column; gap: 12px; }
 
     .cart-section {
-      background: #e9ecef;
-      padding: 20px;
-      border-radius: 12px;
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fe 100%);
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
       margin-bottom: 30px;
+      border: 2px solid #e0e4ef;
     }
 
+    .cart-section h2 { color: #4e54c8; margin-bottom: 15px; }
     .cart-items { list-style: none; margin-bottom: 15px; }
 
     .cart-item {
       display: flex;
       justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid #ccc;
+      padding: 10px 0;
+      border-bottom: 1px dashed #ced4da;
+      font-weight: 500;
     }
 
     .cart-total {
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       font-weight: bold;
       text-align: right;
-      color: #198754;
-      margin-bottom: 15px;
+      color: #28a745;
+      margin-bottom: 18px;
     }
 
     .change-box {
       background: #fff;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
+      padding: 18px;
+      border-radius: 12px;
+      margin-bottom: 18px;
       display: flex;
       flex-direction: column;
       gap: 8px;
-      border: 1px solid #ced4da;
+      border: 2px solid #e0e4ef;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
     }
 
-    .change-box label { font-weight: bold; font-size: 0.9rem; }
+    .change-box label { font-weight: bold; font-size: 0.9rem; color: #495057; }
 
     .change-display {
-      font-size: 1.3rem;
+      font-size: 1.4rem;
       font-weight: bold;
-      color: #0d6efd;
+      color: #4e54c8;
     }
 
     .action-buttons-group {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
 
     .btn-ticket {
-      background-color: #0dcaf0;
-      color: #000;
-      padding: 12px;
-      border-radius: 8px;
+      background: linear-gradient(135deg, #17a2b8 0%, #3bcdde 100%);
+      color: white;
+      padding: 14px;
+      border-radius: 12px;
       border: none;
       font-weight: bold;
       cursor: pointer;
-      font-size: 1rem;
+      font-size: 1.05rem;
       width: 100%;
+      box-shadow: 0 4px 15px rgba(23,162,184,0.3);
     }
 
     footer {
@@ -423,8 +472,8 @@
 </head>
 <body>
 
-  <!-- Inicio de Sesión Privado -->
-  <div id="login-overlay" class="modal-overlay">
+  <!-- Inicio de Sesión Privado (Se oculta si ya hay sesión activa) -->
+  <div id="login-overlay" class="modal-overlay" style="display: none;">
     <div class="modal-card">
       <h2>Iniciar Sesión</h2>
       <div class="form-group">
@@ -439,7 +488,7 @@
     </div>
   </div>
 
-  <!-- Fondo de Caja Inicial (Solo Vendedores) -->
+  <!-- Fondo de Caja Inicial (Solo Vendedores al iniciar turno) -->
   <div id="cash-overlay" class="modal-overlay" style="display: none;">
     <div class="modal-card">
       <h2>Fondo de Caja Inicial</h2>
@@ -482,11 +531,12 @@
 
     <!-- Barra de Control Empresarial -->
     <div class="admin-bar" id="admin-bar-container">
-      <h2 style="color: #0d6efd; font-size: 1.1rem; margin: 0;" id="panel-title-text">Panel de Operaciones</h2>
+      <h2 style="color: #4e54c8; font-size: 1.1rem; margin: 0;" id="panel-title-text">Panel de Operaciones</h2>
       <div class="admin-actions">
         <button class="btn-action btn-excel" id="btn-export-excel" onclick="exportInventoryExcel()" style="display: none;">📊 Descargar Excel (Stock)</button>
-        <button class="btn-action btn-create" id="btn-admin-create" onclick="toggleSection('new-product-form')">➕ Surtir / Nuevo Item</button>
-        <button class="btn-action btn-users" id="btn-admin-users" onclick="toggleSection('new-user-form')">👥 Gestión de Usuarios</button>
+        <button class="btn-action btn-create" id="btn-admin-create" onclick="toggleSection('new-product-form')" style="display: none;">➕ Surtir / Nuevo Item</button>
+        <button class="btn-action btn-users" id="btn-admin-users" onclick="toggleSection('new-user-form')" style="display: none;">👥 Usuarios</button>
+        <button class="btn-action btn-logout" onclick="logoutSession()">🚪 Salir</button>
       </div>
     </div>
 
@@ -592,7 +642,7 @@
 
     <!-- Cotizador (Solo Vendedores) -->
     <section class="calculator-section" id="seller-calculator-section">
-      <h2>Cotizador de Impresiones / Copias</h2>
+      <h2>🖨️ Cotizador de Impresiones / Copias</h2>
       <div class="calc-box">
         <div class="form-group">
           <label for="page-type">Tipo de trabajo:</label>
@@ -632,7 +682,7 @@
       <div class="action-buttons-group">
         <button class="sell-btn" onclick="checkoutDirectSale()">🛍️ Registrar Venta Directa en Mostrador</button>
         <button class="btn-ticket" onclick="printTicket()">🧾 Imprimir / Generar Ticket de Venta</button>
-        <button class="sell-btn" style="background-color: #fd7e14; margin-top: 10px;" onclick="openClosureModal()">🔒 Cerrar Caja del Día</button>
+        <button class="sell-btn" style="background: linear-gradient(135deg, #fd7e14 0%, #ffa94d 100%); margin-top: 10px; box-shadow: 0 4px 15px rgba(253,126,20,0.3);" onclick="openClosureModal()">🔒 Cerrar Caja del Día</button>
       </div>
     </section>
 
@@ -693,6 +743,20 @@
     let tempActiveUser = '';
     let isAdmin = false;
 
+    // Al cargar la página, revisamos si hay una sesión guardada en localStorage
+    window.onload = function() {
+      const savedUser = localStorage.getItem('maki_active_user');
+      const savedRole = localStorage.getItem('maki_user_role');
+
+      if (savedUser && savedRole) {
+        tempActiveUser = savedUser;
+        isAdmin = (savedRole === 'admin');
+        applyUserPermissions();
+      } else {
+        document.getElementById('login-overlay').style.display = 'flex';
+      }
+    };
+
     function syncToCloud() {
       db.ref('maki_app').set({
         products: products,
@@ -745,6 +809,10 @@
         tempActiveUser = user;
         isAdmin = (users[user].role === 'admin');
 
+        // Guardamos en localStorage para que no se pierda al actualizar
+        localStorage.setItem('maki_active_user', tempActiveUser);
+        localStorage.setItem('maki_user_role', isAdmin ? 'admin' : 'vendedor');
+
         applyUserPermissions();
 
         document.getElementById('login-overlay').style.display = 'none';
@@ -757,6 +825,12 @@
       } else {
         alert("Usuario o contraseña incorrectos.");
       }
+    }
+
+    function logoutSession() {
+      localStorage.removeItem('maki_active_user');
+      localStorage.removeItem('maki_user_role');
+      location.reload();
     }
 
     function applyUserPermissions() {
@@ -831,7 +905,7 @@
       container.innerHTML = Object.keys(users).map(u => {
         const roleName = users[u].role === 'admin' ? '⭐ Dueño (Admin)' : '👤 Vendedor';
         const deleteOption = (u !== 'hervin') ? `<button onclick="deleteUser('${u}')" style="background:#dc3545; color:white; border:none; padding:2px 6px; border-radius:4px; margin-left:8px; cursor:pointer; font-size:0.75rem;">Eliminar</button>` : '';
-        return `<div style="background:#e9ecef; padding:5px 10px; border-radius:6px; margin:4px 0; display:flex; justify-content:space-between; align-items:center;"><span><strong>${u}</strong> (${roleName})</span> ${deleteOption}</div>`;
+        return `<div style="background:#f1f3f9; padding:8px 12px; border-radius:8px; margin:6px 0; display:flex; justify-content:space-between; align-items:center;"><span><strong>${u}</strong> (${roleName})</span> ${deleteOption}</div>`;
       }).join('');
     }
 
@@ -870,7 +944,6 @@
     function updateDashboard() {
       document.getElementById('dash-prod-count').textContent = products.length;
       
-      // Para las unidades en stock, filtramos los que no son servicios para que no sumen 999 infinitos
       const totalUnits = products
         .filter(item => item.category !== 'servicios')
         .reduce((sum, item) => sum + Number(item.stock), 0);
@@ -952,7 +1025,7 @@
       <h2>Reporte de Existencias - Papelería Maki (Papelería y Cómputo)</h2>
       <table border="1">
         <thead>
-          <tr style="background-color: #0d6efd; color: white;">
+          <tr style="background-color: #4e54c8; color: white;">
             <th>Nombre del Producto</th>
             <th>Categoría</th>
             <th>Existencia (Stock)</th>
@@ -1092,13 +1165,13 @@
       const changeDisplay = document.getElementById('change-amount');
       if (cash > 0 && change >= 0) {
         changeDisplay.textContent = change.toFixed(2);
-        changeDisplay.style.color = '#198754';
+        changeDisplay.style.color = '#28a745';
       } else if (cash > 0 && change < 0) {
         changeDisplay.textContent = 'Faltan $' + Math.abs(change).toFixed(2);
         changeDisplay.style.color = '#dc3545';
       } else {
         changeDisplay.textContent = '0.00';
-        changeDisplay.style.color = '#0d6efd';
+        changeDisplay.style.color = '#4e54c8';
       }
     }
 
@@ -1116,7 +1189,6 @@
         itemsList.push(item.name);
         if (item.prodId !== null) {
           const prod = products.find(p => Number(p.id) === Number(item.prodId));
-          // Solo descontamos stock si no es un servicio ilimitado
           if (prod && prod.category !== 'servicios' && prod.stock > 0) {
             prod.stock -= 1;
           }
