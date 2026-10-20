@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Papelería Maki - Control de Stock e Ingresos (En Vivo)</title>
+  <title>Papelería Maki - Control Empresarial</title>
   
   <!-- SDK de EmailJS -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -22,7 +22,7 @@
       padding-bottom: 80px;
     }
 
-    /* Modales de Acceso / Asistencia */
+    /* Modales de Acceso */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -81,7 +81,7 @@
       padding: 0 15px;
     }
 
-    /* Panel de Métricas */
+    /* Panel de Métricas Privado */
     .dashboard-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -114,7 +114,7 @@
       color: #212529;
     }
 
-    /* Barra de Control en formato Cajón / Acordeón */
+    /* Barra de Control */
     .admin-bar {
       background: white;
       padding: 15px;
@@ -147,9 +147,9 @@
     .btn-action:hover { opacity: 0.9; }
 
     .btn-create { background: #198754; }
-    .btn-toggle-inv { background: #6f42c1; }
     .btn-history { background: #fd7e14; }
     .btn-users { background: #0dcaf0; color: #000; }
+    .btn-excel { background: #20c997; }
 
     /* Buscador */
     .search-box {
@@ -253,10 +253,11 @@
       background: #0d6efd;
       color: white;
       border: none;
-      padding: 8px;
+      padding: 10px;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
+      font-size: 0.95rem;
     }
 
     .add-btn:disabled {
@@ -268,17 +269,19 @@
       background: #198754;
       color: white;
       border: none;
-      padding: 8px;
+      padding: 12px;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
+      font-size: 1.1rem;
+      width: 100%;
     }
 
     .edit-btn {
       background: #ffc107;
       color: #333;
       border: none;
-      padding: 5px;
+      padding: 6px;
       border-radius: 6px;
       font-size: 0.85rem;
       font-weight: bold;
@@ -289,15 +292,15 @@
       background: #dc3545;
       color: white;
       border: none;
-      padding: 5px;
+      padding: 6px;
       border-radius: 6px;
       font-size: 0.85rem;
       font-weight: bold;
       cursor: pointer;
     }
 
-    /* Estilo Cajón Plegable para Formularios y Tablas */
-    .modal-form, .inventory-section {
+    /* Cajones Plegables */
+    .modal-form {
       background: white;
       padding: 20px;
       border-radius: 12px;
@@ -307,7 +310,7 @@
       border-top: 4px solid #0d6efd;
     }
 
-    .modal-form h3, .inventory-section h2 { color: #0d6efd; margin-bottom: 15px; }
+    .modal-form h3 { color: #0d6efd; margin-bottom: 15px; }
 
     .form-group {
       margin-bottom: 12px;
@@ -336,22 +339,7 @@
       margin-bottom: 15px;
     }
 
-    .table-responsive { overflow-x: auto; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-    }
-
-    th, td {
-      padding: 12px 10px;
-      border-bottom: 1px solid #e9ecef;
-    }
-
-    th { background-color: #f8f9fa; color: #495057; font-size: 0.9rem; }
-
-    /* Cotizador */
+    /* Cotizador y Carrito */
     .calculator-section {
       background: white;
       padding: 20px;
@@ -363,7 +351,6 @@
     .calculator-section h2 { color: #0d6efd; margin-bottom: 15px; }
     .calc-box { display: flex; flex-direction: column; gap: 12px; }
 
-    /* Carrito */
     .cart-section {
       background: #e9ecef;
       padding: 20px;
@@ -388,7 +375,6 @@
       margin-bottom: 15px;
     }
 
-    /* Calculadora de Cambio */
     .change-box {
       background: #fff;
       padding: 15px;
@@ -408,32 +394,22 @@
       color: #0d6efd;
     }
 
-    /* Botones de Operación */
-    .ws-buttons { display: flex; flex-direction: column; gap: 10px; }
-
-    .ws-btn {
-      background-color: #25d366;
-      color: white;
-      padding: 12px;
-      border-radius: 10px;
-      text-decoration: none;
-      font-weight: bold;
-      font-size: 1rem;
-      text-align: center;
-      border: none;
-      cursor: pointer;
+    .action-buttons-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
-
-    .ws-btn:hover { background-color: #1ebd56; }
 
     .btn-ticket {
       background-color: #0dcaf0;
       color: #000;
-      padding: 10px;
+      padding: 12px;
       border-radius: 8px;
       border: none;
       font-weight: bold;
       cursor: pointer;
+      font-size: 1rem;
+      width: 100%;
     }
 
     footer {
@@ -447,23 +423,23 @@
 </head>
 <body>
 
-  <!-- Paso 1: Autenticación de Usuario -->
+  <!-- Inicio de Sesión Privado -->
   <div id="login-overlay" class="modal-overlay">
     <div class="modal-card">
       <h2>Iniciar Sesión</h2>
       <div class="form-group">
         <label>Usuario:</label>
-        <input type="text" id="login-user" placeholder="Ej: hervin">
+        <input type="text" id="login-user" placeholder="Nombre de usuario">
       </div>
       <div class="form-group">
         <label>Contraseña:</label>
         <input type="password" id="login-pass" placeholder="Contraseña">
       </div>
-      <button class="btn-action btn-create" style="width: 100%; margin-top: 10px;" onclick="verifyLogin()">Siguiente</button>
+      <button class="btn-action btn-create" style="width: 100%; margin-top: 10px;" onclick="verifyLogin()">Ingresar</button>
     </div>
   </div>
 
-  <!-- Paso 2: Fondo de Caja Inicial Obligatorio -->
+  <!-- Fondo de Caja Inicial (Solo Vendedores) -->
   <div id="cash-overlay" class="modal-overlay" style="display: none;">
     <div class="modal-card">
       <h2>Fondo de Caja Inicial</h2>
@@ -472,20 +448,20 @@
         <label>Efectivo en Caja ($):</label>
         <input type="number" id="initial-cash-input" placeholder="0.00" step="0.50">
       </div>
-      <button class="btn-action btn-create" style="width: 100%; margin-top: 10px;" onclick="completeLogin()">Ingresar al Sistema</button>
+      <button class="btn-action btn-create" style="width: 100%; margin-top: 10px;" onclick="completeLogin()">Comenzar Turno</button>
     </div>
   </div>
 
   <header class="navbar">
     <h1>Papelería <span>Maki</span></h1>
-    <p>Control de Inventarios, Unidades y Ventas Directas</p>
+    <p id="system-subtitle">Sistema Empresarial</p>
     <div class="sync-status" id="sync-status">🟢 Conectado en Tiempo Real</div>
   </header>
 
   <main class="container">
 
-    <!-- Panel de Métricas -->
-    <div class="dashboard-grid">
+    <!-- Panel de Métricas Privado (Solo Dueño) -->
+    <div class="dashboard-grid" id="dashboard-metrics-container" style="display: none;">
       <div class="dash-card orange">
         <h4>Tipos de Productos</h4>
         <div class="number" id="dash-prod-count">0</div>
@@ -504,39 +480,38 @@
       </div>
     </div>
 
-    <!-- Barra de Control en formato Cajón Acordeón -->
-    <div class="admin-bar">
-      <h2 style="color: #0d6efd; font-size: 1.1rem; margin: 0;">Panel de Administración</h2>
+    <!-- Barra de Control Empresarial -->
+    <div class="admin-bar" id="admin-bar-container">
+      <h2 style="color: #0d6efd; font-size: 1.1rem; margin: 0;" id="panel-title-text">Panel de Operaciones</h2>
       <div class="admin-actions">
-        <button class="btn-action btn-toggle-inv" onclick="toggleSection('inventory-table-section')">📋 Stock</button>
-        <button class="btn-action btn-history" onclick="toggleSection('history-table-section')">📜 Historial / Cierre</button>
-        <button class="btn-action btn-create" onclick="toggleSection('new-product-form')">➕ Nuevo Item</button>
-        <button class="btn-action btn-users" onclick="toggleSection('new-user-form')">👥 Usuarios</button>
+        <button class="btn-action btn-excel" id="btn-export-excel" onclick="exportInventoryExcel()" style="display: none;">📊 Descargar Excel (Stock)</button>
+        <button class="btn-action btn-create" id="btn-admin-create" onclick="toggleSection('new-product-form')">➕ Surtir / Nuevo Item</button>
+        <button class="btn-action btn-users" id="btn-admin-users" onclick="toggleSection('new-user-form')">👥 Gestión de Usuarios</button>
       </div>
     </div>
 
-    <!-- Buscador en tiempo real -->
+    <!-- Buscador -->
     <div class="search-box">
-      <input type="text" id="search-input" placeholder="🔍 Buscar producto o servicio (ej: carpeta, agua, imss)..." oninput="renderProducts()">
+      <input type="text" id="search-input" placeholder="🔍 Buscar producto o servicio (ej: tijeras, cuaderno, agua)..." oninput="renderProducts()">
     </div>
 
-    <!-- Cajón Formulario: Nuevo Producto o Servicio -->
+    <!-- Cajón Formulario: Surtir / Nuevo Producto -->
     <div class="modal-form" id="new-product-form">
       <div class="inventory-header">
-        <h3>Nuevo Producto o Servicio</h3>
+        <h3>Surtir Nuevo Producto o Servicio</h3>
         <button class="delete-btn" style="padding: 4px 10px;" onclick="toggleSection('new-product-form')">✕ Cerrar</button>
       </div>
       <div class="form-group">
         <label>Nombre:</label>
-        <input type="text" id="prod-name" placeholder="Ej: Pago de Luz, Memoria USB">
+        <input type="text" id="prod-name" placeholder="Ej: Tijeras, Sacapuntas, Cuaderno">
       </div>
       <div class="form-group">
         <label>Precio Unitario ($):</label>
         <input type="number" id="prod-price" placeholder="0.00" step="0.50">
       </div>
       <div class="form-group">
-        <label>Cantidad en Stock (Para servicios usar 999):</label>
-        <input type="number" id="prod-stock" value="16" min="0">
+        <label>Cantidad en Stock (Para servicios poner 999):</label>
+        <input type="number" id="prod-stock" value="20" min="0">
       </div>
       <div class="form-group">
         <label>Categoría:</label>
@@ -549,45 +524,57 @@
       <div class="form-group">
         <label>Selecciona un Icono / Emoji:</label>
         <select id="prod-icon">
-          <option value="💧">💧 Recibo de Agua</option>
-          <option value="💡">💡 Recibo de Luz</option>
-          <option value="🧾">🧾 Talón de Pago / Comprobante</option>
-          <option value="🆔">🆔 CURP / Identificación</option>
-          <option value="🎵">🎵 Música / Audio</option>
-          <option value="📄">📄 Documento / Copia</option>
-          <option value="📁">📁 Carpeta / Archivero</option>
+          <option value="✂️">✂️ Tijeras</option>
+          <option value="✏️">✏️ Lápiz / Mina / Sacapuntas</option>
           <option value="🖊️">🖊️ Pluma / Lapicero</option>
-          <option value="✏️">✏️ Lápiz / Mina</option>
+          <option value="🧹">🧹 Borrador / Goma</option>
           <option value="📓">📓 Libreta / Cuaderno</option>
-          <option value="🧮">🧮 Calculadora</option>
-          <option value="🖨️">🖨️ Impresión</option>
+          <option value="📁">📁 Carpeta / Archivero</option>
           <option value="💾">💾 USB / Memoria</option>
+          <option value="🎵">🎵 Música / Audio</option>
+          <option value="🖨️">🖨️ Impresión</option>
+          <option value="📄">📄 Documento / Copia</option>
+          <option value="💡">💡 Recibo de Luz</option>
+          <option value="💧">💧 Recibo de Agua</option>
+          <option value="🆔">🆔 CURP / Identificación</option>
+          <option value="🧾">🧾 Talón de Pago / Comprobante</option>
+          <option value="📐">📐 Regla / Geometría</option>
+          <option value="🎨">🎨 Colores / Marcadores</option>
+          <option value="📌">📌 Clips / Tachuelas / Plastilina</option>
+          <option value="🧮">🧮 Calculadora</option>
         </select>
       </div>
       <div class="form-buttons">
-        <button class="btn-action btn-create" onclick="saveNewProduct()">Guardar Item</button>
+        <button class="btn-action btn-create" onclick="saveNewProduct()">Guardar en Inventario</button>
       </div>
     </div>
 
     <!-- Cajón Formulario: Gestión de Usuarios -->
     <div class="modal-form" id="new-user-form">
       <div class="inventory-header">
-        <h3>Gestión de Usuarios</h3>
+        <h3>Gestión Empresarial de Usuarios</h3>
         <button class="delete-btn" style="padding: 4px 10px;" onclick="toggleSection('new-user-form')">✕ Cerrar</button>
       </div>
       <div class="form-group">
-        <label>Nuevo Usuario:</label>
-        <input type="text" id="new-username" placeholder="Nombre de usuario">
+        <label>Nombre de Usuario:</label>
+        <input type="text" id="new-username" placeholder="Ej: roberto, ana">
       </div>
       <div class="form-group">
         <label>Contraseña:</label>
         <input type="password" id="new-userpass" placeholder="Contraseña">
       </div>
+      <div class="form-group">
+        <label>Rol Empresarial:</label>
+        <select id="new-userrole">
+          <option value="admin">Dueño / Administrador (Surtir e Inventario)</option>
+          <option value="vendedor">Vendedor / Operador (Ventas y Caja)</option>
+        </select>
+      </div>
       <div class="form-buttons">
-        <button class="btn-action btn-create" onclick="saveNewUser()">Guardar Usuario</button>
+        <button class="btn-action btn-create" onclick="saveNewUser()">Registrar Usuario</button>
       </div>
       <div style="margin-top: 15px; font-size: 0.9rem; color: #555;">
-        <strong>Usuarios registrados actualmente:</strong>
+        <strong>Usuarios registrados en la empresa:</strong>
         <div id="users-list-container" style="margin-top: 5px; font-weight: normal;"></div>
       </div>
     </div>
@@ -600,73 +587,11 @@
       <button class="cat-btn" onclick="filterCategory('computo', event)">Cómputo / Accesorios</button>
     </div>
 
-    <!-- Contenedor del Catálogo -->
+    <!-- Catálogo de Productos -->
     <div class="products-grid" id="products-container"></div>
 
-    <!-- Cajón Tabla: Control de Inventario -->
-    <section class="inventory-section" id="inventory-table-section">
-      <div class="inventory-header">
-        <h2>📋 Control de Existencias e Inventario</h2>
-        <button class="delete-btn" style="padding: 6px 12px;" onclick="toggleSection('inventory-table-section')">✕ Cerrar</button>
-      </div>
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>Icono</th>
-              <th>Producto / Servicio</th>
-              <th>Categoría</th>
-              <th>Precio Unitario</th>
-              <th>Stock Disponible</th>
-              <th>Valor Acumulado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="inventory-table-body"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Cajón Tabla: Historial de Ventas, Asistencia y Cierre de Caja -->
-    <section class="inventory-section" id="history-table-section">
-      <div class="inventory-header">
-        <h2>📜 Historial de Turno, Asistencias y Ventas</h2>
-        <button class="delete-btn" style="padding: 6px 12px;" onclick="toggleSection('history-table-section')">✕ Cerrar</button>
-      </div>
-      <div class="table-responsive" style="margin-bottom: 15px;">
-        <h4 style="margin-bottom: 8px; color: #6f42c1;">Registro de Asistencias y Fondos de Caja</h4>
-        <table>
-          <thead>
-            <tr>
-              <th>Fecha y Hora</th>
-              <th>Usuario</th>
-              <th>Fondo Inicial</th>
-            </tr>
-          </thead>
-          <tbody id="attendance-table-body"></tbody>
-        </table>
-      </div>
-      <div class="table-responsive" style="margin-bottom: 15px;">
-        <h4 style="margin-bottom: 8px; color: #198754;">Registro de Ventas</h4>
-        <table>
-          <thead>
-            <tr>
-              <th>Hora / Fecha</th>
-              <th>Detalle de Productos</th>
-              <th>Total Cobrado</th>
-            </tr>
-          </thead>
-          <tbody id="history-table-body"></tbody>
-        </table>
-      </div>
-      <div style="display: flex; gap: 10px; justify-content: flex-end;">
-        <button class="btn-action btn-create" onclick="downloadReport()">📥 Descargar Reporte (.txt)</button>
-        <button class="delete-btn" style="padding: 10px;" onclick="closeShift()">🔒 Cerrar Caja del Día</button>
-      </div>
-    </section>
-
-    <!-- Cotizador -->
-    <section class="calculator-section">
+    <!-- Cotizador (Solo Vendedores) -->
+    <section class="calculator-section" id="seller-calculator-section">
       <h2>Cotizador de Impresiones / Copias</h2>
       <div class="calc-box">
         <div class="form-group">
@@ -689,8 +614,8 @@
       </div>
     </section>
 
-    <!-- Carrito -->
-    <section class="cart-section">
+    <!-- Carrito / Venta (Solo Vendedores) -->
+    <section class="cart-section" id="seller-cart-section">
       <h2>🛒 Pedido Actual</h2>
       <ul class="cart-items" id="cart-items-list">
         <li style="color: #6c757d;">No has agregado productos aún.</li>
@@ -704,11 +629,10 @@
         <div class="change-display">Cambio a Entregar: $<span id="change-amount">0.00</span></div>
       </div>
 
-      <div class="ws-buttons">
-        <button class="sell-btn" style="font-size: 1.1rem; padding: 12px;" onclick="checkoutDirectSale()">🛍️ Registrar Venta Directa en Mostrador</button>
+      <div class="action-buttons-group">
+        <button class="sell-btn" onclick="checkoutDirectSale()">🛍️ Registrar Venta Directa en Mostrador</button>
         <button class="btn-ticket" onclick="printTicket()">🧾 Imprimir / Generar Ticket de Venta</button>
-        <button class="ws-btn" onclick="sendWhatsApp('529614402234')">💬 Enviar a WhatsApp 1 (961 440 2234)</button>
-        <button class="ws-btn" style="background-color: #128c7e;" onclick="sendWhatsApp('529614495630')">💬 Enviar a WhatsApp 2 (961 449 5630)</button>
+        <button class="sell-btn" style="background-color: #fd7e14; margin-top: 10px;" onclick="openClosureModal()">🔒 Cerrar Caja del Día</button>
       </div>
     </section>
 
@@ -736,7 +660,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Inicializamos EmailJS con tu Public Key
     emailjs.init("0eBsCXChatbc349IZ");
 
     let defaultProducts = [
@@ -745,6 +668,8 @@
       { id: 103, name: "Lápiz HB #2", price: 5.00, stock: 50, category: "papeleria", icon: "✏️" },
       { id: 104, name: "Lapicero Tinta Azul", price: 8.00, stock: 40, category: "papeleria", icon: "🖊️" },
       { id: 105, name: "Tijeras Escolares", price: 20.00, stock: 12, category: "papeleria", icon: "✂️" },
+      { id: 106, name: "Sacapuntas", price: 6.00, stock: 30, category: "papeleria", icon: "✏️" },
+      { id: 107, name: "Borrador / Goma", price: 5.00, stock: 35, category: "papeleria", icon: "🧹" },
       { id: 201, name: "Recibo de Agua / Luz", price: 25.00, stock: 999, category: "servicios", icon: "💡" },
       { id: 202, name: "Talón de Pago ISSTECH", price: 15.00, stock: 999, category: "servicios", icon: "🧾" },
       { id: 203, name: "Talón de Pago IMSS", price: 15.00, stock: 999, category: "servicios", icon: "🧾" },
@@ -759,10 +684,14 @@
     let totalIncome = 0;
     let salesHistory = [];
     let attendanceHistory = [];
-    let users = { "hervin": "123" };
+    let users = { 
+      "hervin": { pass: "123", role: "admin" }, 
+      "hiromi": { pass: "123", role: "vendedor" } 
+    };
     let cart = [];
     let currentCategory = 'todos';
     let tempActiveUser = '';
+    let isAdmin = false;
 
     function syncToCloud() {
       db.ref('maki_app').set({
@@ -781,38 +710,87 @@
         totalIncome = data.income || 0;
         salesHistory = data.history || [];
         attendanceHistory = data.attendance || [];
-        users = data.users || { "hervin": "123" };
+        let rawUsers = data.users || { "hervin": { pass: "123", role: "admin" }, "hiromi": { pass: "123", role: "vendedor" } };
+        users = {};
+        for (let u in rawUsers) {
+          if (typeof rawUsers[u] === 'string') {
+            users[u] = { pass: rawUsers[u], role: (u === 'hervin' ? 'admin' : 'vendedor') };
+          } else {
+            users[u] = rawUsers[u];
+          }
+        }
       } else {
         products = defaultProducts;
         totalIncome = 0;
         salesHistory = [];
         attendanceHistory = [];
-        users = { "hervin": "123" };
+        users = { 
+          "hervin": { pass: "123", role: "admin" }, 
+          "hiromi": { pass: "123", role: "vendedor" } 
+        };
         syncToCloud();
       }
       renderProducts();
-      renderHistory();
       renderUsersList();
       document.getElementById('sync-status').textContent = "🟢 Conectado en Tiempo Real";
     }, (error) => {
       document.getElementById('sync-status').textContent = "🔴 Error de Conexión";
     });
 
-    // Control de Login (Paso 1)
     function verifyLogin() {
       const user = document.getElementById('login-user').value.trim().toLowerCase();
       const pass = document.getElementById('login-pass').value.trim();
 
-      if (users[user] && users[user] === pass) {
+      if (users[user] && users[user].pass === pass) {
         tempActiveUser = user;
+        isAdmin = (users[user].role === 'admin');
+
+        applyUserPermissions();
+
         document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('cash-overlay').style.display = 'flex';
+
+        if (isAdmin) {
+          document.getElementById('cash-overlay').style.display = 'none';
+        } else {
+          document.getElementById('cash-overlay').style.display = 'flex';
+        }
       } else {
         alert("Usuario o contraseña incorrectos.");
       }
     }
 
-    // Fondo de Caja (Paso 2)
+    function applyUserPermissions() {
+      const metricsContainer = document.getElementById('dashboard-metrics-container');
+      const btnExportExcel = document.getElementById('btn-export-excel');
+      const btnAdminCreate = document.getElementById('btn-admin-create');
+      const btnAdminUsers = document.getElementById('btn-admin-users');
+      const panelTitle = document.getElementById('panel-title-text');
+      
+      const sellerCalc = document.getElementById('seller-calculator-section');
+      const sellerCart = document.getElementById('seller-cart-section');
+
+      if (isAdmin) {
+        metricsContainer.style.display = 'grid';
+        btnExportExcel.style.display = 'inline-block';
+        btnAdminCreate.style.display = 'inline-block';
+        btnAdminUsers.style.display = 'inline-block';
+        panelTitle.textContent = "Panel de Administración y Surtido (Dueño)";
+
+        sellerCalc.style.display = 'none';
+        sellerCart.style.display = 'none';
+      } else {
+        metricsContainer.style.display = 'none';
+        btnExportExcel.style.display = 'none';
+        btnAdminCreate.style.display = 'none';
+        btnAdminUsers.style.display = 'none';
+        panelTitle.textContent = "Panel de Ventas y Caja";
+
+        sellerCalc.style.display = 'block';
+        sellerCart.style.display = 'block';
+      }
+      renderProducts();
+    }
+
     function completeLogin() {
       const initialCash = parseFloat(document.getElementById('initial-cash-input').value);
       if (isNaN(initialCash) || initialCash < 0) {
@@ -830,9 +808,13 @@
       document.getElementById('cash-overlay').style.display = 'none';
     }
 
-    // Manejador de cajones desplegables (Acordeón)
     function toggleSection(sectionId) {
-      const allSections = ['new-product-form', 'new-user-form', 'inventory-table-section', 'history-table-section'];
+      if (!isAdmin && (sectionId === 'new-product-form' || sectionId === 'new-user-form')) {
+        alert('⛔ Acceso restringido.');
+        return;
+      }
+
+      const allSections = ['new-product-form', 'new-user-form'];
       allSections.forEach(id => {
         const el = document.getElementById(id);
         if (id === sectionId) {
@@ -841,24 +823,30 @@
           el.style.display = 'none';
         }
       });
-      if (sectionId === 'history-table-section') renderHistory();
     }
 
     function renderUsersList() {
       const container = document.getElementById('users-list-container');
-      container.innerHTML = Object.keys(users).map(u => `<span style="display:inline-block; background:#e9ecef; padding:3px 8px; border-radius:6px; margin:2px; text-transform:capitalize;">👤 ${u}</span>`).join('');
+      if (!container) return;
+      container.innerHTML = Object.keys(users).map(u => {
+        const roleName = users[u].role === 'admin' ? '⭐ Dueño (Admin)' : '👤 Vendedor';
+        const deleteOption = (u !== 'hervin') ? `<button onclick="deleteUser('${u}')" style="background:#dc3545; color:white; border:none; padding:2px 6px; border-radius:4px; margin-left:8px; cursor:pointer; font-size:0.75rem;">Eliminar</button>` : '';
+        return `<div style="background:#e9ecef; padding:5px 10px; border-radius:6px; margin:4px 0; display:flex; justify-content:space-between; align-items:center;"><span><strong>${u}</strong> (${roleName})</span> ${deleteOption}</div>`;
+      }).join('');
     }
 
     function saveNewUser() {
+      if (!isAdmin) return;
       const user = document.getElementById('new-username').value.trim().toLowerCase();
       const pass = document.getElementById('new-userpass').value.trim();
+      const role = document.getElementById('new-userrole').value;
 
       if (!user || !pass) {
-        alert("Ingresa un usuario y contraseña válidos.");
+        alert("Ingresa un nombre de usuario y contraseña válidos.");
         return;
       }
 
-      users[user] = pass;
+      users[user] = { pass: pass, role: role };
       syncToCloud();
       alert(`✅ Usuario "${user}" creado exitosamente.`);
       document.getElementById('new-username').value = '';
@@ -867,19 +855,37 @@
       toggleSection('new-user-form');
     }
 
+    function deleteUser(username) {
+      if (username === 'hervin') {
+        alert('No se puede eliminar al usuario dueño principal.');
+        return;
+      }
+      if (confirm(`¿Seguro que deseas eliminar al usuario "${username}"?`)) {
+        delete users[username];
+        syncToCloud();
+        renderUsersList();
+      }
+    }
+
     function updateDashboard() {
       document.getElementById('dash-prod-count').textContent = products.length;
-
-      const totalUnits = products.reduce((sum, item) => sum + Number(item.stock), 0);
+      
+      // Para las unidades en stock, filtramos los que no son servicios para que no sumen 999 infinitos
+      const totalUnits = products
+        .filter(item => item.category !== 'servicios')
+        .reduce((sum, item) => sum + Number(item.stock), 0);
       document.getElementById('dash-total-units').textContent = `${totalUnits} pzs`;
 
-      const totalValue = products.reduce((sum, item) => sum + (Number(item.price) * Number(item.stock)), 0);
+      const totalValue = products
+        .filter(item => item.category !== 'servicios')
+        .reduce((sum, item) => sum + (Number(item.price) * Number(item.stock)), 0);
       document.getElementById('dash-inventory-val').textContent = `$${totalValue.toFixed(2)}`;
-
+      
       document.getElementById('dash-income-total').textContent = `$${totalIncome.toFixed(2)}`;
     }
 
     function saveNewProduct() {
+      if (!isAdmin) return;
       const name = document.getElementById('prod-name').value;
       const price = parseFloat(document.getElementById('prod-price').value);
       const stock = parseInt(document.getElementById('prod-stock').value) || 0;
@@ -897,13 +903,18 @@
       
       document.getElementById('prod-name').value = '';
       document.getElementById('prod-price').value = '';
-      document.getElementById('prod-stock').value = '16';
+      document.getElementById('prod-stock').value = '20';
       toggleSection('new-product-form');
     }
 
     function editStock(id) {
+      if (!isAdmin) return;
       const prod = products.find(p => Number(p.id) === Number(id));
       if (prod) {
+        if (prod.category === 'servicios') {
+          alert('Los servicios tienen stock ilimitado y no requieren inventario.');
+          return;
+        }
         const newStock = prompt(`Actualizar unidades en stock de "${prod.name}":`, prod.stock);
         if (newStock !== null && !isNaN(parseInt(newStock))) {
           prod.stock = parseInt(newStock);
@@ -913,6 +924,7 @@
     }
 
     function editPrice(id) {
+      if (!isAdmin) return;
       const prod = products.find(p => Number(p.id) === Number(id));
       if (prod) {
         const newPrice = prompt(`Nuevo precio para "${prod.name}":`, prod.price);
@@ -924,19 +936,55 @@
     }
 
     function deleteProduct(id) {
+      if (!isAdmin) return;
       if (confirm("¿Seguro que quieres eliminar este elemento del catálogo?")) {
         products = products.filter(p => Number(p.id) !== Number(id));
         syncToCloud();
       }
     }
 
+    function exportInventoryExcel() {
+      const filteredStock = products.filter(p => p.category === 'papeleria' || p.category === 'computo');
+
+      let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/1999/xlink">
+      <head><meta charset="UTF-8"></head>
+      <body>
+      <h2>Reporte de Existencias - Papelería Maki (Papelería y Cómputo)</h2>
+      <table border="1">
+        <thead>
+          <tr style="background-color: #0d6efd; color: white;">
+            <th>Nombre del Producto</th>
+            <th>Categoría</th>
+            <th>Existencia (Stock)</th>
+            <th>Precio Unitario ($)</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+      filteredStock.forEach(p => {
+        html += `<tr>
+          <td>${p.name}</td>
+          <td style="text-transform: capitalize;">${p.category}</td>
+          <td>${p.stock}</td>
+          <td>$${Number(p.price).toFixed(2)}</td>
+        </tr>`;
+      });
+
+      html += `</tbody></table></body></html>`;
+
+      const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Inventario_Papeleria_Computo_${new Date().toISOString().slice(0, 10)}.xls`;
+      a.click();
+    }
+
     function renderProducts() {
       const container = document.getElementById('products-container');
-      const tableBody = document.getElementById('inventory-table-body');
       const searchTerm = document.getElementById('search-input').value.toLowerCase();
       
       container.innerHTML = '';
-      tableBody.innerHTML = '';
 
       const filtered = products.filter(p => {
         const matchesCategory = (currentCategory === 'todos' || p.category === currentCategory);
@@ -947,79 +995,30 @@
       filtered.forEach(product => {
         const card = document.createElement('div');
         card.className = 'product-card';
-        const isOut = product.stock <= 0;
+        const isService = product.category === 'servicios';
+        const isOut = !isService && product.stock <= 0;
         
+        let stockDisplay = isService ? 'Servicio Ilimitado' : (isOut ? 'Agotado' : 'Stock: ' + product.stock + ' pzs');
+
         card.innerHTML = `
           <div class="product-icon">${product.icon}</div>
           <div class="product-title">${product.name}</div>
           <div class="product-price">$${Number(product.price).toFixed(2)}</div>
-          <div class="product-stock ${isOut ? 'out' : ''}">${isOut ? 'Agotado' : (product.category === 'servicios' ? 'Servicio Disponible' : 'Stock: ' + product.stock + ' pzs')}</div>
+          <div class="product-stock ${isOut ? 'out' : ''}">${stockDisplay}</div>
           <div class="card-actions">
-            <button class="add-btn" onclick="addToCart(${product.id})" ${isOut ? 'disabled' : ''}>+ Agregar</button>
-            <button class="edit-btn" onclick="editStock(${product.id})">📦 Stock</button>
-            <button class="delete-btn" onclick="deleteProduct(${product.id})">🗑️ Borrar</button>
+            ${isAdmin ? `
+              ${!isService ? `<button class="edit-btn" onclick="editStock(${product.id})">📦 Stock: ${product.stock}</button>` : ''}
+              <button class="edit-btn" onclick="editPrice(${product.id})">✏️ Cambiar Precio</button>
+              <button class="delete-btn" onclick="deleteProduct(${product.id})">🗑️ Borrar</button>
+            ` : `
+              <button class="add-btn" onclick="addToCart(${product.id})" ${isOut ? 'disabled' : ''}>+ Agregar</button>
+            `}
           </div>
         `;
         container.appendChild(card);
       });
 
-      products.forEach(product => {
-        const tr = document.createElement('tr');
-        const accumulatedVal = Number(product.price) * Number(product.stock);
-        
-        tr.innerHTML = `
-          <td style="font-size: 1.5rem;">${product.icon}</td>
-          <td style="font-weight: bold;">${product.name}</td>
-          <td style="text-transform: capitalize;">${product.category}</td>
-          <td style="color: #198754; font-weight: bold;">$${Number(product.price).toFixed(2)}</td>
-          <td style="font-weight: bold;">${product.stock} unidades</td>
-          <td style="color: #0d6efd; font-weight: bold;">$${accumulatedVal.toFixed(2)}</td>
-          <td>
-            <button class="edit-btn" onclick="editStock(${product.id})">📦 Stock</button>
-            <button class="edit-btn" onclick="editPrice(${product.id})">✏️ Precio</button>
-            <button class="delete-btn" onclick="deleteProduct(${product.id})">🗑️ Borrar</button>
-          </td>
-        `;
-        tableBody.appendChild(tr);
-      });
-
       updateDashboard();
-    }
-
-    function renderHistory() {
-      const tableBody = document.getElementById('history-table-body');
-      const attBody = document.getElementById('attendance-table-body');
-      
-      tableBody.innerHTML = '';
-      attBody.innerHTML = '';
-
-      if (salesHistory.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#6c757d;">No hay ventas registradas el día de hoy.</td></tr>';
-      } else {
-        salesHistory.slice().reverse().forEach(sale => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td style="font-size: 0.85rem; color:#495057;">${sale.date}</td>
-            <td>${sale.items.join(', ')}</td>
-            <td style="color: #198754; font-weight: bold;">$${sale.total.toFixed(2)}</td>
-          `;
-          tableBody.appendChild(tr);
-        });
-      }
-
-      if (attendanceHistory.length === 0) {
-        attBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#6c757d;">No hay registros de asistencia.</td></tr>';
-      } else {
-        attendanceHistory.slice().reverse().forEach(att => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td style="font-size: 0.85rem; color:#495057;">${att.date}</td>
-            <td style="font-weight: bold; text-transform: capitalize;">${att.user}</td>
-            <td style="color: #198754; font-weight: bold;">$${(att.initialCash || 0).toFixed(2)}</td>
-          `;
-          attBody.appendChild(tr);
-        });
-      }
     }
 
     function filterCategory(cat, e) {
@@ -1033,9 +1032,10 @@
       const prod = products.find(p => Number(p.id) === Number(prodId));
       if (!prod) return;
 
+      const isService = prod.category === 'servicios';
       const currentInCart = cart.filter(item => Number(item.prodId) === Number(prodId)).length;
       
-      if (prod.stock <= currentInCart) {
+      if (!isService && prod.stock <= currentInCart) {
         alert(`No hay más unidades suficientes en stock de "${prod.name}".`);
         return;
       }
@@ -1116,7 +1116,8 @@
         itemsList.push(item.name);
         if (item.prodId !== null) {
           const prod = products.find(p => Number(p.id) === Number(item.prodId));
-          if (prod && prod.stock > 0) {
+          // Solo descontamos stock si no es un servicio ilimitado
+          if (prod && prod.category !== 'servicios' && prod.stock > 0) {
             prod.stock -= 1;
           }
         }
@@ -1206,58 +1207,9 @@
       printWin.close();
     }
 
-    function sendWhatsApp(phoneNumber) {
-      if (cart.length === 0) {
-        alert('Agrega al menos un producto al carrito para enviar el pedido por WhatsApp.');
-        return;
-      }
-
-      let message = "🛒 *Nuevo Pedido - Papelería Maki*\n\n";
-      let total = 0;
-
-      cart.forEach(item => {
-        message += `• ${item.name}: $${item.price.toFixed(2)}\n`;
-        total += item.price;
-      });
-
-      message += `\n*Total a Pagar:* $${total.toFixed(2)}`;
-
-      const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-      window.open(url, '_blank');
-    }
-
-    function downloadReport() {
-      if (salesHistory.length === 0) {
-        alert('No hay ventas registradas para generar el reporte.');
-        return;
-      }
-
-      let reportText = `========================================\n`;
-      reportText += `   PAPELERÍA MAKI - REPORTE DE VENTAS   \n`;
-      reportText += `   Fecha: ${new Date().toLocaleDateString()}\n`;
-      reportText += `========================================\n\n`;
-
-      salesHistory.forEach((sale, index) => {
-        reportText += `Venta #${index + 1} - [${sale.date}]\n`;
-        reportText += `Artículos: ${sale.items.join(', ')}\n`;
-        reportText += `Total: $${sale.total.toFixed(2)}\n`;
-        reportText += `----------------------------------------\n`;
-      });
-
-      reportText += `\nINGRESOS TOTALES DEL DÍA: $${totalIncome.toFixed(2)}\n`;
-
-      const blob = new Blob([reportText], { type: 'text/plain;charset=utf-8' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `Reporte_Ventas_Maki_${new Date().toISOString().slice(0, 10)}.txt`;
-      a.click();
-    }
-
-    // Cierre de caja corregido con Fondo Inicial, Hora de Apertura y Hora de Cierre
-    function closeShift() {
+    function openClosureModal() {
       if (confirm(`¿Estás seguro de cerrar la caja del día?\n\nAtendido por: ${tempActiveUser.toUpperCase()}\nTotal acumulado: $${totalIncome.toFixed(2)}\n\nEsto enviará el reporte detallado a tu correo y reiniciará los ingresos.`)) {
         
-        // Obtenemos el registro de la apertura de caja de este turno
         const lastAttendance = attendanceHistory.length > 0 ? attendanceHistory[attendanceHistory.length - 1] : null;
         
         const initialCashVal = (lastAttendance && lastAttendance.initialCash !== undefined) 
