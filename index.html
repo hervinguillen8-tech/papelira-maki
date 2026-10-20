@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Papelería Maki - Control de Stock e Ingresos (En Vivo)</title>
+  
+  <!-- SDK de EmailJS -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -16,6 +20,37 @@
       background-color: #f4f6f9;
       color: #333;
       padding-bottom: 80px;
+    }
+
+    /* Modales de Acceso / Asistencia */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 15px;
+    }
+
+    .modal-card {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+
+    .modal-card h2 {
+      color: #0d6efd;
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+      text-align: center;
     }
 
     /* Header */
@@ -46,7 +81,7 @@
       padding: 0 15px;
     }
 
-    /* Resumen Financiero e Inventario */
+    /* Panel de Métricas */
     .dashboard-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -79,52 +114,42 @@
       color: #212529;
     }
 
-    /* Barra de Control */
+    /* Barra de Control en formato Cajón / Acordeón */
     .admin-bar {
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .admin-actions {
+      display: flex;
       gap: 10px;
       flex-wrap: wrap;
     }
 
-    .btn-create {
-      background: #198754;
+    .btn-action {
+      background: #0d6efd;
       color: white;
       border: none;
-      padding: 10px 18px;
+      padding: 10px 16px;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
-      font-size: 1rem;
+      font-size: 0.9rem;
     }
+    .btn-action:hover { opacity: 0.9; }
 
-    .btn-create:hover { background: #157347; }
-
-    .btn-toggle-inv {
-      background: #6f42c1;
-      color: white;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 0.95rem;
-    }
-
-    .btn-toggle-inv:hover { background: #59359a; }
-
-    .btn-history {
-      background: #fd7e14;
-      color: white;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 0.95rem;
-    }
+    .btn-create { background: #198754; }
+    .btn-toggle-inv { background: #6f42c1; }
+    .btn-history { background: #fd7e14; }
+    .btn-users { background: #0dcaf0; color: #000; }
 
     /* Buscador */
     .search-box {
@@ -271,17 +296,18 @@
       cursor: pointer;
     }
 
-    /* Formulario */
-    .modal-form {
+    /* Estilo Cajón Plegable para Formularios y Tablas */
+    .modal-form, .inventory-section {
       background: white;
       padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
       margin-bottom: 25px;
       display: none;
+      border-top: 4px solid #0d6efd;
     }
 
-    .modal-form h3 { color: #0d6efd; margin-bottom: 15px; }
+    .modal-form h3, .inventory-section h2 { color: #0d6efd; margin-bottom: 15px; }
 
     .form-group {
       margin-bottom: 12px;
@@ -303,24 +329,12 @@
       margin-top: 15px;
     }
 
-    /* Tabla de Inventario Detallado */
-    .inventory-section {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      margin-bottom: 30px;
-      display: none;
-    }
-
     .inventory-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 15px;
     }
-
-    .inventory-section h2 { color: #0d6efd; margin: 0; }
 
     .table-responsive { overflow-x: auto; }
 
@@ -433,6 +447,35 @@
 </head>
 <body>
 
+  <!-- Paso 1: Autenticación de Usuario -->
+  <div id="login-overlay" class="modal-overlay">
+    <div class="modal-card">
+      <h2>Iniciar Sesión</h2>
+      <div class="form-group">
+        <label>Usuario:</label>
+        <input type="text" id="login-user" placeholder="Ej: hervin">
+      </div>
+      <div class="form-group">
+        <label>Contraseña:</label>
+        <input type="password" id="login-pass" placeholder="Contraseña">
+      </div>
+      <button class="btn-action btn-create" style="width: 100%; margin-top: 10px;" onclick="verifyLogin()">Siguiente</button>
+    </div>
+  </div>
+
+  <!-- Paso 2: Fondo de Caja Inicial Obligatorio -->
+  <div id="cash-overlay" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <h2>Fondo de Caja Inicial</h2>
+      <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px; text-align: center;">¿Con cuánto dinero efectivo inicia la caja hoy?</p>
+      <div class="form-group">
+        <label>Efectivo en Caja ($):</label>
+        <input type="number" id="initial-cash-input" placeholder="0.00" step="0.50">
+      </div>
+      <button class="btn-action btn-create" style="width: 100%; margin-top: 10px;" onclick="completeLogin()">Ingresar al Sistema</button>
+    </div>
+  </div>
+
   <header class="navbar">
     <h1>Papelería <span>Maki</span></h1>
     <p>Control de Inventarios, Unidades y Ventas Directas</p>
@@ -461,13 +504,14 @@
       </div>
     </div>
 
-    <!-- Barra de Control -->
+    <!-- Barra de Control en formato Cajón Acordeón -->
     <div class="admin-bar">
-      <h2 style="color: #0d6efd;">Catálogo y Servicios</h2>
-      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-        <button class="btn-toggle-inv" onclick="toggleInventoryTable()">📋 Tabla de Stock</button>
-        <button class="btn-history" onclick="toggleHistoryTable()">📜 Historial / Cierre</button>
-        <button class="btn-create" onclick="toggleForm()">➕ Nuevo Item</button>
+      <h2 style="color: #0d6efd; font-size: 1.1rem; margin: 0;">Panel de Administración</h2>
+      <div class="admin-actions">
+        <button class="btn-action btn-toggle-inv" onclick="toggleSection('inventory-table-section')">📋 Stock</button>
+        <button class="btn-action btn-history" onclick="toggleSection('history-table-section')">📜 Historial / Cierre</button>
+        <button class="btn-action btn-create" onclick="toggleSection('new-product-form')">➕ Nuevo Item</button>
+        <button class="btn-action btn-users" onclick="toggleSection('new-user-form')">👥 Usuarios</button>
       </div>
     </div>
 
@@ -476,9 +520,12 @@
       <input type="text" id="search-input" placeholder="🔍 Buscar producto o servicio (ej: carpeta, agua, imss)..." oninput="renderProducts()">
     </div>
 
-    <!-- Formulario para Agregar Producto / Servicio -->
+    <!-- Cajón Formulario: Nuevo Producto o Servicio -->
     <div class="modal-form" id="new-product-form">
-      <h3>Nuevo Producto o Servicio</h3>
+      <div class="inventory-header">
+        <h3>Nuevo Producto o Servicio</h3>
+        <button class="delete-btn" style="padding: 4px 10px;" onclick="toggleSection('new-product-form')">✕ Cerrar</button>
+      </div>
       <div class="form-group">
         <label>Nombre:</label>
         <input type="text" id="prod-name" placeholder="Ej: Pago de Luz, Memoria USB">
@@ -518,8 +565,30 @@
         </select>
       </div>
       <div class="form-buttons">
-        <button class="btn-create" onclick="saveNewProduct()">Guardar Item</button>
-        <button class="delete-btn" onclick="toggleForm()" style="padding: 10px;">Cancelar</button>
+        <button class="btn-action btn-create" onclick="saveNewProduct()">Guardar Item</button>
+      </div>
+    </div>
+
+    <!-- Cajón Formulario: Gestión de Usuarios -->
+    <div class="modal-form" id="new-user-form">
+      <div class="inventory-header">
+        <h3>Gestión de Usuarios</h3>
+        <button class="delete-btn" style="padding: 4px 10px;" onclick="toggleSection('new-user-form')">✕ Cerrar</button>
+      </div>
+      <div class="form-group">
+        <label>Nuevo Usuario:</label>
+        <input type="text" id="new-username" placeholder="Nombre de usuario">
+      </div>
+      <div class="form-group">
+        <label>Contraseña:</label>
+        <input type="password" id="new-userpass" placeholder="Contraseña">
+      </div>
+      <div class="form-buttons">
+        <button class="btn-action btn-create" onclick="saveNewUser()">Guardar Usuario</button>
+      </div>
+      <div style="margin-top: 15px; font-size: 0.9rem; color: #555;">
+        <strong>Usuarios registrados actualmente:</strong>
+        <div id="users-list-container" style="margin-top: 5px; font-weight: normal;"></div>
       </div>
     </div>
 
@@ -534,11 +603,11 @@
     <!-- Contenedor del Catálogo -->
     <div class="products-grid" id="products-container"></div>
 
-    <!-- Tabla de Control de Inventario -->
+    <!-- Cajón Tabla: Control de Inventario -->
     <section class="inventory-section" id="inventory-table-section">
       <div class="inventory-header">
         <h2>📋 Control de Existencias e Inventario</h2>
-        <button class="delete-btn" style="padding: 6px 12px;" onclick="toggleInventoryTable()">✕ Cerrar</button>
+        <button class="delete-btn" style="padding: 6px 12px;" onclick="toggleSection('inventory-table-section')">✕ Cerrar</button>
       </div>
       <div class="table-responsive">
         <table>
@@ -558,13 +627,27 @@
       </div>
     </section>
 
-    <!-- Historial de Ventas y Cierre de Caja -->
+    <!-- Cajón Tabla: Historial de Ventas, Asistencia y Cierre de Caja -->
     <section class="inventory-section" id="history-table-section">
       <div class="inventory-header">
-        <h2>📜 Historial de Ventas y Cierre de Caja</h2>
-        <button class="delete-btn" style="padding: 6px 12px;" onclick="toggleHistoryTable()">✕ Cerrar</button>
+        <h2>📜 Historial de Turno, Asistencias y Ventas</h2>
+        <button class="delete-btn" style="padding: 6px 12px;" onclick="toggleSection('history-table-section')">✕ Cerrar</button>
       </div>
       <div class="table-responsive" style="margin-bottom: 15px;">
+        <h4 style="margin-bottom: 8px; color: #6f42c1;">Registro de Asistencias y Fondos de Caja</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha y Hora</th>
+              <th>Usuario</th>
+              <th>Fondo Inicial</th>
+            </tr>
+          </thead>
+          <tbody id="attendance-table-body"></tbody>
+        </table>
+      </div>
+      <div class="table-responsive" style="margin-bottom: 15px;">
+        <h4 style="margin-bottom: 8px; color: #198754;">Registro de Ventas</h4>
         <table>
           <thead>
             <tr>
@@ -577,7 +660,7 @@
         </table>
       </div>
       <div style="display: flex; gap: 10px; justify-content: flex-end;">
-        <button class="btn-create" onclick="downloadReport()">📥 Descargar Reporte (.txt)</button>
+        <button class="btn-action btn-create" onclick="downloadReport()">📥 Descargar Reporte (.txt)</button>
         <button class="delete-btn" style="padding: 10px;" onclick="closeShift()">🔒 Cerrar Caja del Día</button>
       </div>
     </section>
@@ -640,20 +723,21 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <script>
-    // ⚙️ INSTRUCCIONES: Reemplaza este objeto con tus datos de Firebase Console
     const firebaseConfig = {
-      apiKey: "TU_API_KEY",
-      authDomain: "tu-proyecto.firebaseapp.com",
-      databaseURL: "https://tu-proyecto-default-rtdb.firebaseio.com",
-      projectId: "tu-proyecto",
-      storageBucket: "tu-proyecto.appspot.com",
+      apiKey: "PEGA_AQUI_TU_API_KEY",
+      authDomain: "papeleria-maki2.firebaseapp.com",
+      databaseURL: "https://papeleria-maki2-default-rtdb.firebaseio.com",
+      projectId: "papeleria-maki2",
+      storageBucket: "papeleria-maki2.appspot.com",
       messagingSenderId: "123456789",
       appId: "1:123456789:web:abcdef"
     };
 
-    // Inicializar Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
+    // Inicializamos EmailJS con tu Public Key
+    emailjs.init("0eBsCXChatbc349IZ");
 
     let defaultProducts = [
       { id: 101, name: "Carpeta de Argollas", price: 50.00, stock: 16, category: "papeleria", icon: "📁" },
@@ -674,38 +758,114 @@
     let products = [];
     let totalIncome = 0;
     let salesHistory = [];
+    let attendanceHistory = [];
+    let users = { "hervin": "123" };
     let cart = [];
     let currentCategory = 'todos';
+    let tempActiveUser = '';
 
-    // Guardar en la Nube
     function syncToCloud() {
       db.ref('maki_app').set({
         products: products,
         income: totalIncome,
-        history: salesHistory
+        history: salesHistory,
+        attendance: attendanceHistory,
+        users: users
       });
     }
 
-    // Escuchar cambios en la Nube (Tiempo Real)
     db.ref('maki_app').on('value', (snapshot) => {
       const data = snapshot.val();
       if (data) {
         products = data.products || [];
         totalIncome = data.income || 0;
         salesHistory = data.history || [];
+        attendanceHistory = data.attendance || [];
+        users = data.users || { "hervin": "123" };
       } else {
-        // Cargar por primera vez si la base de datos está vacía
         products = defaultProducts;
         totalIncome = 0;
         salesHistory = [];
+        attendanceHistory = [];
+        users = { "hervin": "123" };
         syncToCloud();
       }
       renderProducts();
       renderHistory();
+      renderUsersList();
       document.getElementById('sync-status').textContent = "🟢 Conectado en Tiempo Real";
     }, (error) => {
       document.getElementById('sync-status').textContent = "🔴 Error de Conexión";
     });
+
+    // Control de Login (Paso 1)
+    function verifyLogin() {
+      const user = document.getElementById('login-user').value.trim().toLowerCase();
+      const pass = document.getElementById('login-pass').value.trim();
+
+      if (users[user] && users[user] === pass) {
+        tempActiveUser = user;
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('cash-overlay').style.display = 'flex';
+      } else {
+        alert("Usuario o contraseña incorrectos.");
+      }
+    }
+
+    // Fondo de Caja (Paso 2)
+    function completeLogin() {
+      const initialCash = parseFloat(document.getElementById('initial-cash-input').value);
+      if (isNaN(initialCash) || initialCash < 0) {
+        alert("Por favor ingresa un monto válido para el fondo de caja.");
+        return;
+      }
+
+      const now = new Date();
+      attendanceHistory.push({
+        date: now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+        user: tempActiveUser,
+        initialCash: initialCash
+      });
+      syncToCloud();
+      document.getElementById('cash-overlay').style.display = 'none';
+    }
+
+    // Manejador de cajones desplegables (Acordeón)
+    function toggleSection(sectionId) {
+      const allSections = ['new-product-form', 'new-user-form', 'inventory-table-section', 'history-table-section'];
+      allSections.forEach(id => {
+        const el = document.getElementById(id);
+        if (id === sectionId) {
+          el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+        } else {
+          el.style.display = 'none';
+        }
+      });
+      if (sectionId === 'history-table-section') renderHistory();
+    }
+
+    function renderUsersList() {
+      const container = document.getElementById('users-list-container');
+      container.innerHTML = Object.keys(users).map(u => `<span style="display:inline-block; background:#e9ecef; padding:3px 8px; border-radius:6px; margin:2px; text-transform:capitalize;">👤 ${u}</span>`).join('');
+    }
+
+    function saveNewUser() {
+      const user = document.getElementById('new-username').value.trim().toLowerCase();
+      const pass = document.getElementById('new-userpass').value.trim();
+
+      if (!user || !pass) {
+        alert("Ingresa un usuario y contraseña válidos.");
+        return;
+      }
+
+      users[user] = pass;
+      syncToCloud();
+      alert(`✅ Usuario "${user}" creado exitosamente.`);
+      document.getElementById('new-username').value = '';
+      document.getElementById('new-userpass').value = '';
+      renderUsersList();
+      toggleSection('new-user-form');
+    }
 
     function updateDashboard() {
       document.getElementById('dash-prod-count').textContent = products.length;
@@ -717,22 +877,6 @@
       document.getElementById('dash-inventory-val').textContent = `$${totalValue.toFixed(2)}`;
 
       document.getElementById('dash-income-total').textContent = `$${totalIncome.toFixed(2)}`;
-    }
-
-    function toggleForm() {
-      const form = document.getElementById('new-product-form');
-      form.style.display = form.style.display === 'block' ? 'none' : 'block';
-    }
-
-    function toggleInventoryTable() {
-      const section = document.getElementById('inventory-table-section');
-      section.style.display = (section.style.display === 'none' || section.style.display === '') ? 'block' : 'none';
-    }
-
-    function toggleHistoryTable() {
-      const section = document.getElementById('history-table-section');
-      section.style.display = (section.style.display === 'none' || section.style.display === '') ? 'block' : 'none';
-      renderHistory();
     }
 
     function saveNewProduct() {
@@ -754,7 +898,7 @@
       document.getElementById('prod-name').value = '';
       document.getElementById('prod-price').value = '';
       document.getElementById('prod-stock').value = '16';
-      toggleForm();
+      toggleSection('new-product-form');
     }
 
     function editStock(id) {
@@ -800,7 +944,6 @@
         return matchesCategory && matchesSearch;
       });
 
-      // Render Tarjetas
       filtered.forEach(product => {
         const card = document.createElement('div');
         card.className = 'product-card';
@@ -820,7 +963,6 @@
         container.appendChild(card);
       });
 
-      // Render Tabla Detallada
       products.forEach(product => {
         const tr = document.createElement('tr');
         const accumulatedVal = Number(product.price) * Number(product.stock);
@@ -846,22 +988,38 @@
 
     function renderHistory() {
       const tableBody = document.getElementById('history-table-body');
+      const attBody = document.getElementById('attendance-table-body');
+      
       tableBody.innerHTML = '';
+      attBody.innerHTML = '';
 
       if (salesHistory.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#6c757d;">No hay ventas registradas el día de hoy.</td></tr>';
-        return;
+      } else {
+        salesHistory.slice().reverse().forEach(sale => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td style="font-size: 0.85rem; color:#495057;">${sale.date}</td>
+            <td>${sale.items.join(', ')}</td>
+            <td style="color: #198754; font-weight: bold;">$${sale.total.toFixed(2)}</td>
+          `;
+          tableBody.appendChild(tr);
+        });
       }
 
-      salesHistory.slice().reverse().forEach(sale => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td style="font-size: 0.85rem; color:#495057;">${sale.date}</td>
-          <td>${sale.items.join(', ')}</td>
-          <td style="color: #198754; font-weight: bold;">$${sale.total.toFixed(2)}</td>
-        `;
-        tableBody.appendChild(tr);
-      });
+      if (attendanceHistory.length === 0) {
+        attBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#6c757d;">No hay registros de asistencia.</td></tr>';
+      } else {
+        attendanceHistory.slice().reverse().forEach(att => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td style="font-size: 0.85rem; color:#495057;">${att.date}</td>
+            <td style="font-weight: bold; text-transform: capitalize;">${att.user}</td>
+            <td style="color: #198754; font-weight: bold;">$${(att.initialCash || 0).toFixed(2)}</td>
+          `;
+          attBody.appendChild(tr);
+        });
+      }
     }
 
     function filterCategory(cat, e) {
@@ -966,7 +1124,6 @@
 
       totalIncome += totalSale;
 
-      // Registrar historial
       const now = new Date();
       salesHistory.push({
         date: now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
@@ -1096,12 +1253,49 @@
       a.click();
     }
 
+    // Cierre de caja corregido con Fondo Inicial, Hora de Apertura y Hora de Cierre
     function closeShift() {
-      if (confirm(`¿Estás seguro de cerrar la caja del día?\n\nTotal acumulado: $${totalIncome.toFixed(2)}\n\nEsto reiniciará los ingresos del día e historial a $0.00.`)) {
-        totalIncome = 0;
-        salesHistory = [];
-        syncToCloud();
-        alert('🔒 Caja cerrada exitosamente. Los registros del día se han reiniciado.');
+      if (confirm(`¿Estás seguro de cerrar la caja del día?\n\nAtendido por: ${tempActiveUser.toUpperCase()}\nTotal acumulado: $${totalIncome.toFixed(2)}\n\nEsto enviará el reporte detallado a tu correo y reiniciará los ingresos.`)) {
+        
+        // Obtenemos el registro de la apertura de caja de este turno
+        const lastAttendance = attendanceHistory.length > 0 ? attendanceHistory[attendanceHistory.length - 1] : null;
+        
+        const initialCashVal = (lastAttendance && lastAttendance.initialCash !== undefined) 
+          ? Number(lastAttendance.initialCash).toFixed(2) 
+          : "0.00";
+          
+        const openTimeVal = lastAttendance ? lastAttendance.date : "No registrada";
+        const closeTimeVal = new Date().toLocaleString();
+
+        const templateParams = {
+          email: "hervinguillen8@gmail.com",
+          user: tempActiveUser.toUpperCase(),
+          date: new Date().toLocaleDateString(),
+          openTime: openTimeVal,
+          closeTime: closeTimeVal,
+          initialCash: initialCashVal,
+          summaryText: salesHistory.length > 0 
+            ? salesHistory.map(s => `• [${s.date}] Productos: ${s.items.join(', ')} -> Subtotal: $${s.total.toFixed(2)}`).join('<br>')
+            : "Sin ventas registradas en este turno.",
+          totalIncome: totalIncome.toFixed(2)
+        };
+
+        emailjs.send("default_service", "template_iy8j3e2", templateParams)
+          .then((response) => {
+             alert('🔒 Caja cerrada exitosamente. ¡El reporte formateado tipo Excel ha sido enviado a tu Gmail!');
+             totalIncome = 0;
+             salesHistory = [];
+             attendanceHistory = [];
+             syncToCloud();
+             location.reload();
+          }, (error) => {
+             alert('🔒 Caja cerrada, pero hubo un error al enviar el correo. Revisa tu conexión.');
+             totalIncome = 0;
+             salesHistory = [];
+             attendanceHistory = [];
+             syncToCloud();
+             location.reload();
+          });
       }
     }
   </script>
