@@ -472,7 +472,7 @@
 </head>
 <body>
 
-  <!-- Inicio de Sesión Privado (Se oculta si ya hay sesión activa) -->
+  <!-- Inicio de Sesión Privado -->
   <div id="login-overlay" class="modal-overlay" style="display: none;">
     <div class="modal-card">
       <h2>Iniciar Sesión</h2>
@@ -524,7 +524,7 @@
         <div class="number" id="dash-inventory-val">$0.00</div>
       </div>
       <div class="dash-card green">
-        <h4>Ingresos del Día</h4>
+        <h4>Ingresos Globales Hoy</h4>
         <div class="number" id="dash-income-total">$0.00</div>
       </div>
     </div>
@@ -731,19 +731,18 @@
     ];
 
     let products = [];
-    let totalIncome = 0;
-    let salesHistory = [];
-    let attendanceHistory = [];
     let users = { 
       "hervin": { pass: "123", role: "admin" }, 
       "hiromi": { pass: "123", role: "vendedor" } 
     };
+    let cashSessions = {};
+
     let cart = [];
     let currentCategory = 'todos';
     let tempActiveUser = '';
     let isAdmin = false;
 
-    // Al cargar la página, revisamos si hay una sesión guardada en localStorage
+    // Al cargar la página, verificamos si hay sesión guardada
     window.onload = function() {
       const savedUser = localStorage.getItem('maki_active_user');
       const savedRole = localStorage.getItem('maki_user_role');
@@ -757,23 +756,21 @@
       }
     };
 
-    function syncToCloud() {
-      db.ref('maki_app').set({
-        products: products,
-        income: totalIncome,
-        history: salesHistory,
-        attendance: attendanceHistory,
-        users: users
-      });
+    function syncProductsAndUsers() {
+      db.ref('maki_app/products').set(products);
+      db.ref('maki_app/users').set(users);
+    }
+
+    function syncUserSession(username) {
+      if (!username) return;
+      const userCash = cashSessions[username] || { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [] };
+      db.ref(`maki_app/cash_sessions/${username}`).set(userCash);
     }
 
     db.ref('maki_app').on('value', (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        products = data.products || [];
-        totalIncome = data.income || 0;
-        salesHistory = data.history || [];
-        attendanceHistory = data.attendance || [];
+        products = data.products || defaultProducts;
         let rawUsers = data.users || { "hervin": { pass: "123", role: "admin" }, "hiromi": { pass: "123", role: "vendedor" } };
         users = {};
         for (let u in rawUsers) {
@@ -783,16 +780,15 @@
             users[u] = rawUsers[u];
           }
         }
+        cashSessions = data.cash_sessions || {};
       } else {
         products = defaultProducts;
-        totalIncome = 0;
-        salesHistory = [];
-        attendanceHistory = [];
         users = { 
           "hervin": { pass: "123", role: "admin" }, 
           "hiromi": { pass: "123", role: "vendedor" } 
         };
-        syncToCloud();
+        cashSessions = {};
+        syncProductsAndUsers();
       }
       renderProducts();
       renderUsersList();
@@ -809,7 +805,6 @@
         tempActiveUser = user;
         isAdmin = (users[user].role === 'admin');
 
-        // Guardamos en localStorage para que no se pierda al actualizar
         localStorage.setItem('maki_active_user', tempActiveUser);
         localStorage.setItem('maki_user_role', isAdmin ? 'admin' : 'vendedor');
 
@@ -848,7 +843,7 @@
         btnExportExcel.style.display = 'inline-block';
         btnAdminCreate.style.display = 'inline-block';
         btnAdminUsers.style.display = 'inline-block';
-        panelTitle.textContent = "Panel de Administración y Surtido (Dueño)";
+        panelTitle.textContent = `Panel de Administración y Surtido - Usuario: ${tempActiveUser.toUpperCase()}`;
 
         sellerCalc.style.display = 'none';
         sellerCart.style.display = 'none';
@@ -857,7 +852,7 @@
         btnExportExcel.style.display = 'none';
         btnAdminCreate.style.display = 'none';
         btnAdminUsers.style.display = 'none';
-        panelTitle.textContent = "Panel de Ventas y Caja";
+        panelTitle.textContent = `Panel de Ventas y Caja - Vendedor: ${tempActiveUser.toUpperCase()}`;
 
         sellerCalc.style.display = 'block';
         sellerCart.style.display = 'block';
@@ -873,12 +868,18 @@
       }
 
       const now = new Date();
-      attendanceHistory.push({
+      if (!cashSessions[tempActiveUser]) {
+        cashSessions[tempActiveUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [] };
+      }
+
+      cashSessions[tempActiveUser].initialCash = initialCash;
+      cashSessions[tempActiveUser].attendance.push({
         date: now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
         user: tempActiveUser,
         initialCash: initialCash
       });
-      syncToCloud();
+
+      syncUserSession(tempActiveUser);
       document.getElementById('cash-overlay').style.display = 'none';
     }
 
@@ -921,7 +922,7 @@
       }
 
       users[user] = { pass: pass, role: role };
-      syncToCloud();
+      syncProductsAndUsers();
       alert(`✅ Usuario "${user}" creado exitosamente.`);
       document.getElementById('new-username').value = '';
       document.getElementById('new-userpass').value = '';
@@ -936,7 +937,7 @@
       }
       if (confirm(`¿Seguro que deseas eliminar al usuario "${username}"?`)) {
         delete users[username];
-        syncToCloud();
+        syncProductsAndUsers();
         renderUsersList();
       }
     }
@@ -954,7 +955,12 @@
         .reduce((sum, item) => sum + (Number(item.price) * Number(item.stock)), 0);
       document.getElementById('dash-inventory-val').textContent = `$${totalValue.toFixed(2)}`;
       
-      document.getElementById('dash-income-total').textContent = `$${totalIncome.toFixed(2)}`;
+      // Suma total de los ingresos de todas las sesiones activas
+      let globalIncome = 0;
+      for (let u in cashSessions) {
+        globalIncome += (cashSessions[u].totalIncome || 0);
+      }
+      document.getElementById('dash-income-total').textContent = `$${globalIncome.toFixed(2)}`;
     }
 
     function saveNewProduct() {
@@ -972,7 +978,7 @@
 
       const newProd = { id: Date.now(), name, price, stock, category, icon };
       products.push(newProd);
-      syncToCloud();
+      syncProductsAndUsers();
       
       document.getElementById('prod-name').value = '';
       document.getElementById('prod-price').value = '';
@@ -991,7 +997,7 @@
         const newStock = prompt(`Actualizar unidades en stock de "${prod.name}":`, prod.stock);
         if (newStock !== null && !isNaN(parseInt(newStock))) {
           prod.stock = parseInt(newStock);
-          syncToCloud();
+          syncProductsAndUsers();
         }
       }
     }
@@ -1003,7 +1009,7 @@
         const newPrice = prompt(`Nuevo precio para "${prod.name}":`, prod.price);
         if (newPrice !== null && !isNaN(parseFloat(newPrice))) {
           prod.price = parseFloat(newPrice);
-          syncToCloud();
+          syncProductsAndUsers();
         }
       }
     }
@@ -1012,7 +1018,7 @@
       if (!isAdmin) return;
       if (confirm("¿Seguro que quieres eliminar este elemento del catálogo?")) {
         products = products.filter(p => Number(p.id) !== Number(id));
-        syncToCloud();
+        syncProductsAndUsers();
       }
     }
 
@@ -1195,10 +1201,18 @@
         }
       });
 
-      totalIncome += totalSale;
+      if (!cashSessions[tempActiveUser]) {
+        cashSessions[tempActiveUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [] };
+      }
+
+      cashSessions[tempActiveUser].totalIncome = (cashSessions[tempActiveUser].totalIncome || 0) + totalSale;
 
       const now = new Date();
-      salesHistory.push({
+      if (!cashSessions[tempActiveUser].salesHistory) {
+        cashSessions[tempActiveUser].salesHistory = [];
+      }
+
+      cashSessions[tempActiveUser].salesHistory.push({
         date: now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
         items: itemsList,
         total: totalSale
@@ -1206,7 +1220,11 @@
 
       cart = [];
       document.getElementById('cash-received').value = '';
-      syncToCloud();
+      
+      // Sincronizar stock actualizado y sesión de caja
+      syncProductsAndUsers();
+      syncUserSession(tempActiveUser);
+
       updateCartUI();
       return totalSale;
     }
@@ -1280,16 +1298,20 @@
     }
 
     function openClosureModal() {
-      if (confirm(`¿Estás seguro de cerrar la caja del día?\n\nAtendido por: ${tempActiveUser.toUpperCase()}\nTotal acumulado: $${totalIncome.toFixed(2)}\n\nEsto enviará el reporte detallado a tu correo y reiniciará los ingresos.`)) {
+      const userSession = cashSessions[tempActiveUser] || { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [] };
+
+      if (confirm(`¿Estás seguro de cerrar la caja del día?\n\nAtendido por: ${tempActiveUser.toUpperCase()}\nTotal acumulado en este turno: $${(userSession.totalIncome || 0).toFixed(2)}\n\nEsto enviará el reporte a tu correo y te pedirá iniciar sesión para abrir caja otra vez.`)) {
         
-        const lastAttendance = attendanceHistory.length > 0 ? attendanceHistory[attendanceHistory.length - 1] : null;
+        const attendanceList = userSession.attendance || [];
+        const lastAttendance = attendanceList.length > 0 ? attendanceList[attendanceList.length - 1] : null;
         
-        const initialCashVal = (lastAttendance && lastAttendance.initialCash !== undefined) 
-          ? Number(lastAttendance.initialCash).toFixed(2) 
+        const initialCashVal = (userSession.initialCash !== undefined) 
+          ? Number(userSession.initialCash).toFixed(2) 
           : "0.00";
           
         const openTimeVal = lastAttendance ? lastAttendance.date : "No registrada";
         const closeTimeVal = new Date().toLocaleString();
+        const userSalesHistory = userSession.salesHistory || [];
 
         const templateParams = {
           email: "hervinguillen8@gmail.com",
@@ -1298,27 +1320,36 @@
           openTime: openTimeVal,
           closeTime: closeTimeVal,
           initialCash: initialCashVal,
-          summaryText: salesHistory.length > 0 
-            ? salesHistory.map(s => `• [${s.date}] Productos: ${s.items.join(', ')} -> Subtotal: $${s.total.toFixed(2)}`).join('<br>')
+          summaryText: userSalesHistory.length > 0 
+            ? userSalesHistory.map(s => `• [${s.date}] Productos: ${s.items.join(', ')} -> Subtotal: $${s.total.toFixed(2)}`).join('<br>')
             : "Sin ventas registradas en este turno.",
-          totalIncome: totalIncome.toFixed(2)
+          totalIncome: (userSession.totalIncome || 0).toFixed(2)
+        };
+
+        const resetSessionAndPromptLogin = () => {
+          // Limpiar únicamente los datos de la caja del usuario activo
+          cashSessions[tempActiveUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [] };
+          syncUserSession(tempActiveUser);
+
+          // Remover la sesión local para requerir ingresar credenciales de nuevo
+          localStorage.removeItem('maki_active_user');
+          localStorage.removeItem('maki_user_role');
+          
+          tempActiveUser = '';
+          isAdmin = false;
+          
+          document.getElementById('login-user').value = '';
+          document.getElementById('login-pass').value = '';
+          document.getElementById('login-overlay').style.display = 'flex';
         };
 
         emailjs.send("default_service", "template_iy8j3e2", templateParams)
           .then((response) => {
-             alert('🔒 Caja cerrada exitosamente. ¡El reporte formateado tipo Excel ha sido enviado a tu Gmail!');
-             totalIncome = 0;
-             salesHistory = [];
-             attendanceHistory = [];
-             syncToCloud();
-             location.reload();
+             alert('🔒 Caja cerrada exitosamente. ¡El reporte formateado ha sido enviado a tu Gmail!');
+             resetSessionAndPromptLogin();
           }, (error) => {
              alert('🔒 Caja cerrada, pero hubo un error al enviar el correo. Revisa tu conexión.');
-             totalIncome = 0;
-             salesHistory = [];
-             attendanceHistory = [];
-             syncToCloud();
-             location.reload();
+             resetSessionAndPromptLogin();
           });
       }
     }
