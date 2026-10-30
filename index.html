@@ -488,7 +488,7 @@
     </div>
   </div>
 
-  <!-- Fondo de Caja Inicial (Solo Vendedores al abrir caja) -->
+  <!-- Fondo de Caja Inicial -->
   <div id="cash-overlay" class="modal-overlay" style="display: none;">
     <div class="modal-card">
       <h2 id="cash-modal-title">Fondo de Caja Inicial (Folio #1)</h2>
@@ -820,21 +820,20 @@
           document.getElementById('cash-overlay').style.display = 'none';
           applyUserPermissions();
         } else {
-          // Si es vendedor, verificamos si ya tiene caja abierta en la base de datos
           setTimeout(() => {
             const userSession = cashSessions[tempActiveUser];
-            // Si no tiene sesión activa o su caja está cerrada (initialCash no definido o en 0 sin turno activo)
+            // Si la caja está cerrada (initialCash es 0 o no existe), pedimos el fondo inicial y mostramos su folio actual
             if (!userSession || userSession.initialCash === undefined || userSession.initialCash === 0) {
               const currentFolio = (userSession && userSession.folio) ? userSession.folio : 1;
               document.getElementById('cash-modal-title').textContent = `Fondo de Caja Inicial (Folio #${currentFolio})`;
               document.getElementById('cash-overlay').style.display = 'flex';
             } else {
-              // Ya tiene caja abierta, guardamos sesión local y entramos directamente sin pedir fondo
+              // Ya tiene caja abierta, entra directo sin pedir fondo de nuevo
               localStorage.setItem('maki_active_user', tempActiveUser);
               localStorage.setItem('maki_user_role', 'vendedor');
               applyUserPermissions();
             }
-          }, 400);
+          }, 300);
         }
       } else {
         alert("Usuario o contraseña incorrectos.");
@@ -896,20 +895,20 @@
         cashSessions[tempActiveUser].attendance = [];
       }
 
+      const currentFolio = cashSessions[tempActiveUser].folio || 1;
+
       cashSessions[tempActiveUser].attendance.push({
         date: now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
         user: tempActiveUser,
         initialCash: initialCash,
-        folio: cashSessions[tempActiveUser].folio || 1
+        folio: currentFolio
       });
 
       syncUserSession(tempActiveUser);
 
-      // Guardamos credenciales locales para que no pida login ni fondo al actualizar página
       localStorage.setItem('maki_active_user', tempActiveUser);
       localStorage.setItem('maki_user_role', 'vendedor');
 
-      // Ocultar modal y abrir el sistema
       document.getElementById('cash-overlay').style.display = 'none';
       applyUserPermissions();
     }
@@ -1328,8 +1327,9 @@
 
     function openClosureModal() {
       const userSession = cashSessions[tempActiveUser] || { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: 1 };
+      const currentFolioNum = userSession.folio || 1;
 
-      if (confirm(`¿Estás seguro de cerrar la caja del día (Folio #${userSession.folio || 1})?\n\nAtendido por: ${tempActiveUser.toUpperCase()}\nTotal acumulado: $${(userSession.totalIncome || 0).toFixed(2)}\n\nEsto enviará el reporte a tu correo y reiniciará la caja con su respectivo incremento de folio para el siguiente turno.`)) {
+      if (confirm(`¿Estás seguro de cerrar la caja del día (Folio #${currentFolioNum})?\n\nAtendido por: ${tempActiveUser.toUpperCase()}\nTotal acumulado: $${(userSession.totalIncome || 0).toFixed(2)}\n\nEsto enviará el reporte moderno a tu correo y aumentará el folio en 1 para el siguiente turno.`)) {
         
         const attendanceList = userSession.attendance || [];
         const lastAttendance = attendanceList.length > 0 ? attendanceList[attendanceList.length - 1] : null;
@@ -1341,8 +1341,8 @@
         const openTimeVal = lastAttendance ? lastAttendance.date : "No registrada";
         const closeTimeVal = new Date().toLocaleString();
         const userSalesHistory = userSession.salesHistory || [];
-        const currentFolioNum = userSession.folio || 1;
 
+        // Parámetros enviados a EmailJS incluyendo el número de folio
         const templateParams = {
           email: "hervinguillen8@gmail.com",
           user: tempActiveUser.toUpperCase(),
@@ -1350,6 +1350,7 @@
           openTime: openTimeVal,
           closeTime: closeTimeVal,
           initialCash: initialCashVal,
+          folio: currentFolioNum,
           summaryText: userSalesHistory.length > 0 
             ? userSalesHistory.map(s => `• [${s.date}] Productos: ${s.items.join(', ')} -> Subtotal: $${s.total.toFixed(2)}`).join('<br>')
             : "Sin ventas registradas en este turno.",
@@ -1357,12 +1358,12 @@
         };
 
         const resetSessionAndPromptLogin = () => {
-          // Incrementamos el contador de folio en 1 para el siguiente turno y reseteamos ingresos
+          // Incrementamos el folio en 1 para la siguiente apertura
           const nextFolio = currentFolioNum + 1;
           cashSessions[tempActiveUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: nextFolio };
           syncUserSession(tempActiveUser);
 
-          // Remover sesión local para obligar a poner contraseña y nuevo fondo de caja al reingresar
+          // Limpiamos la sesión local para exigir contraseña de nuevo al reingresar
           localStorage.removeItem('maki_active_user');
           localStorage.removeItem('maki_user_role');
           
@@ -1376,7 +1377,7 @@
 
         emailjs.send("default_service", "template_iy8j3e2", templateParams)
           .then((response) => {
-             alert('🔒 Caja cerrada exitosamente. ¡El reporte formateado ha sido enviado a tu Gmail!');
+             alert('🔒 Caja cerrada exitosamente. ¡El reporte moderno con su número de folio ha sido enviado a tu Gmail!');
              resetSessionAndPromptLogin();
           }, (error) => {
              alert('🔒 Caja cerrada, pero hubo un error al enviar el correo. Revisa tu conexión.');
