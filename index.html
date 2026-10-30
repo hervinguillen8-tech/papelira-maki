@@ -488,10 +488,10 @@
     </div>
   </div>
 
-  <!-- Fondo de Caja Inicial (Solo Vendedores al iniciar turno) -->
+  <!-- Fondo de Caja Inicial (Solo Vendedores al abrir caja) -->
   <div id="cash-overlay" class="modal-overlay" style="display: none;">
     <div class="modal-card">
-      <h2>Fondo de Caja Inicial</h2>
+      <h2 id="cash-modal-title">Fondo de Caja Inicial (Folio #1)</h2>
       <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px; text-align: center;">¿Con cuánto dinero efectivo inicia la caja hoy?</p>
       <div class="form-group">
         <label>Efectivo en Caja ($):</label>
@@ -574,23 +574,30 @@
       <div class="form-group">
         <label>Selecciona un Icono / Emoji:</label>
         <select id="prod-icon">
+          <option value="📓">📓 Cuaderno / Libreta</option>
           <option value="✂️">✂️ Tijeras</option>
-          <option value="✏️">✏️ Lápiz / Mina / Sacapuntas</option>
+          <option value="✏️">✏️ Lápiz</option>
           <option value="🖊️">🖊️ Pluma / Lapicero</option>
+          <option value="📐">📐 Regla / Juego de Geometría</option>
           <option value="🧹">🧹 Borrador / Goma</option>
-          <option value="📓">📓 Libreta / Cuaderno</option>
           <option value="📁">📁 Carpeta / Archivero</option>
+          <option value="🎞️">🎞️ Diurex / Cinta Adhesiva</option>
+          <option value="✏️">✏️ Sacapuntas</option>
+          <option value="📄">📄 Hojas / Papel / Copia</option>
+          <option value="📎">📎 Broche Baco / Clips</option>
+          <option value="🗂️">🗂️ Broches de Pinza / Binder Clip</option>
           <option value="💾">💾 USB / Memoria</option>
           <option value="🎵">🎵 Música / Audio</option>
+          <option value="🆔">🆔 CURP / Identificación</option>
+          <option value="🔪">🔪 Cutter / Exacto</option>
+          <option value="🖍️">🖍️ Corrector / Cinta</option>
+          <option value="🖊️">🖊️ Plumón / Marcador</option>
           <option value="🖨️">🖨️ Impresión</option>
-          <option value="📄">📄 Documento / Copia</option>
           <option value="💡">💡 Recibo de Luz</option>
           <option value="💧">💧 Recibo de Agua</option>
-          <option value="🆔">🆔 CURP / Identificación</option>
           <option value="🧾">🧾 Talón de Pago / Comprobante</option>
-          <option value="📐">📐 Regla / Geometría</option>
-          <option value="🎨">🎨 Colores / Marcadores</option>
-          <option value="📌">📌 Clips / Tachuelas / Plastilina</option>
+          <option value="🎨">🎨 Colores / Pinturas</option>
+          <option value="📌">📌 Tachuelas / Plastilina</option>
           <option value="🧮">🧮 Calculadora</option>
         </select>
       </div>
@@ -742,7 +749,7 @@
     let tempActiveUser = '';
     let isAdmin = false;
 
-    // Al cargar la página, verificamos si hay sesión guardada
+    // Al cargar la página, validamos sesión persistente
     window.onload = function() {
       const savedUser = localStorage.getItem('maki_active_user');
       const savedRole = localStorage.getItem('maki_user_role');
@@ -763,7 +770,7 @@
 
     function syncUserSession(username) {
       if (!username) return;
-      const userCash = cashSessions[username] || { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [] };
+      const userCash = cashSessions[username] || { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: 1 };
       db.ref(`maki_app/cash_sessions/${username}`).set(userCash);
     }
 
@@ -805,17 +812,29 @@
         tempActiveUser = user;
         isAdmin = (users[user].role === 'admin');
 
-        localStorage.setItem('maki_active_user', tempActiveUser);
-        localStorage.setItem('maki_user_role', isAdmin ? 'admin' : 'vendedor');
-
-        applyUserPermissions();
-
         document.getElementById('login-overlay').style.display = 'none';
 
         if (isAdmin) {
+          localStorage.setItem('maki_active_user', tempActiveUser);
+          localStorage.setItem('maki_user_role', 'admin');
           document.getElementById('cash-overlay').style.display = 'none';
+          applyUserPermissions();
         } else {
-          document.getElementById('cash-overlay').style.display = 'flex';
+          // Si es vendedor, verificamos si ya tiene caja abierta en la base de datos
+          setTimeout(() => {
+            const userSession = cashSessions[tempActiveUser];
+            // Si no tiene sesión activa o su caja está cerrada (initialCash no definido o en 0 sin turno activo)
+            if (!userSession || userSession.initialCash === undefined || userSession.initialCash === 0) {
+              const currentFolio = (userSession && userSession.folio) ? userSession.folio : 1;
+              document.getElementById('cash-modal-title').textContent = `Fondo de Caja Inicial (Folio #${currentFolio})`;
+              document.getElementById('cash-overlay').style.display = 'flex';
+            } else {
+              // Ya tiene caja abierta, guardamos sesión local y entramos directamente sin pedir fondo
+              localStorage.setItem('maki_active_user', tempActiveUser);
+              localStorage.setItem('maki_user_role', 'vendedor');
+              applyUserPermissions();
+            }
+          }, 400);
         }
       } else {
         alert("Usuario o contraseña incorrectos.");
@@ -869,18 +888,30 @@
 
       const now = new Date();
       if (!cashSessions[tempActiveUser]) {
-        cashSessions[tempActiveUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [] };
+        cashSessions[tempActiveUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: 1 };
       }
 
       cashSessions[tempActiveUser].initialCash = initialCash;
+      if (!cashSessions[tempActiveUser].attendance) {
+        cashSessions[tempActiveUser].attendance = [];
+      }
+
       cashSessions[tempActiveUser].attendance.push({
         date: now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
         user: tempActiveUser,
-        initialCash: initialCash
+        initialCash: initialCash,
+        folio: cashSessions[tempActiveUser].folio || 1
       });
 
       syncUserSession(tempActiveUser);
+
+      // Guardamos credenciales locales para que no pida login ni fondo al actualizar página
+      localStorage.setItem('maki_active_user', tempActiveUser);
+      localStorage.setItem('maki_user_role', 'vendedor');
+
+      // Ocultar modal y abrir el sistema
       document.getElementById('cash-overlay').style.display = 'none';
+      applyUserPermissions();
     }
 
     function toggleSection(sectionId) {
@@ -955,7 +986,6 @@
         .reduce((sum, item) => sum + (Number(item.price) * Number(item.stock)), 0);
       document.getElementById('dash-inventory-val').textContent = `$${totalValue.toFixed(2)}`;
       
-      // Suma total de los ingresos de todas las sesiones activas
       let globalIncome = 0;
       for (let u in cashSessions) {
         globalIncome += (cashSessions[u].totalIncome || 0);
@@ -1202,7 +1232,7 @@
       });
 
       if (!cashSessions[tempActiveUser]) {
-        cashSessions[tempActiveUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [] };
+        cashSessions[tempActiveUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: 1 };
       }
 
       cashSessions[tempActiveUser].totalIncome = (cashSessions[tempActiveUser].totalIncome || 0) + totalSale;
@@ -1221,7 +1251,6 @@
       cart = [];
       document.getElementById('cash-received').value = '';
       
-      // Sincronizar stock actualizado y sesión de caja
       syncProductsAndUsers();
       syncUserSession(tempActiveUser);
 
@@ -1298,9 +1327,9 @@
     }
 
     function openClosureModal() {
-      const userSession = cashSessions[tempActiveUser] || { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [] };
+      const userSession = cashSessions[tempActiveUser] || { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: 1 };
 
-      if (confirm(`¿Estás seguro de cerrar la caja del día?\n\nAtendido por: ${tempActiveUser.toUpperCase()}\nTotal acumulado en este turno: $${(userSession.totalIncome || 0).toFixed(2)}\n\nEsto enviará el reporte a tu correo y te pedirá iniciar sesión para abrir caja otra vez.`)) {
+      if (confirm(`¿Estás seguro de cerrar la caja del día (Folio #${userSession.folio || 1})?\n\nAtendido por: ${tempActiveUser.toUpperCase()}\nTotal acumulado: $${(userSession.totalIncome || 0).toFixed(2)}\n\nEsto enviará el reporte a tu correo y reiniciará la caja con su respectivo incremento de folio para el siguiente turno.`)) {
         
         const attendanceList = userSession.attendance || [];
         const lastAttendance = attendanceList.length > 0 ? attendanceList[attendanceList.length - 1] : null;
@@ -1312,6 +1341,7 @@
         const openTimeVal = lastAttendance ? lastAttendance.date : "No registrada";
         const closeTimeVal = new Date().toLocaleString();
         const userSalesHistory = userSession.salesHistory || [];
+        const currentFolioNum = userSession.folio || 1;
 
         const templateParams = {
           email: "hervinguillen8@gmail.com",
@@ -1327,11 +1357,12 @@
         };
 
         const resetSessionAndPromptLogin = () => {
-          // Limpiar únicamente los datos de la caja del usuario activo
-          cashSessions[tempActiveUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [] };
+          // Incrementamos el contador de folio en 1 para el siguiente turno y reseteamos ingresos
+          const nextFolio = currentFolioNum + 1;
+          cashSessions[tempActiveUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: nextFolio };
           syncUserSession(tempActiveUser);
 
-          // Remover la sesión local para requerir ingresar credenciales de nuevo
+          // Remover sesión local para obligar a poner contraseña y nuevo fondo de caja al reingresar
           localStorage.removeItem('maki_active_user');
           localStorage.removeItem('maki_user_role');
           
