@@ -509,22 +509,22 @@
 
   <main class="container">
 
-    <!-- Panel de Métricas Privado (Solo Dueño) -->
-    <div class="dashboard-grid" id="dashboard-metrics-container" style="display: none;">
-      <div class="dash-card orange">
+    <!-- Panel de Métricas / Ingresos del Día (Visible para Dueño y Vendedores) -->
+    <div class="dashboard-grid" id="dashboard-metrics-container">
+      <div class="dash-card orange" id="card-prod-count-box">
         <h4>Tipos de Productos</h4>
         <div class="number" id="dash-prod-count">0</div>
       </div>
-      <div class="dash-card purple">
+      <div class="dash-card purple" id="card-total-units-box">
         <h4>Total Unidades en Stock</h4>
         <div class="number" id="dash-total-units">0 pzs</div>
       </div>
-      <div class="dash-card">
+      <div class="dash-card" id="card-inventory-val-box">
         <h4>Valor Total Inventario</h4>
         <div class="number" id="dash-inventory-val">$0.00</div>
       </div>
       <div class="dash-card green">
-        <h4>Ingresos Globales Hoy</h4>
+        <h4>Ingresos Turno Actual</h4>
         <div class="number" id="dash-income-total">$0.00</div>
       </div>
     </div>
@@ -749,13 +749,19 @@
     let tempActiveUser = '';
     let isAdmin = false;
 
-    // Al cargar la página, validamos sesión persistente
+    function getActiveUser() {
+      if (!tempActiveUser || tempActiveUser === "" || tempActiveUser === "usuario") {
+        tempActiveUser = localStorage.getItem('maki_active_user') || 'hiromi';
+      }
+      return tempActiveUser.toLowerCase();
+    }
+
     window.onload = function() {
       const savedUser = localStorage.getItem('maki_active_user');
       const savedRole = localStorage.getItem('maki_user_role');
 
       if (savedUser && savedRole) {
-        tempActiveUser = savedUser;
+        tempActiveUser = savedUser.toLowerCase();
         isAdmin = (savedRole === 'admin');
         applyUserPermissions();
       } else {
@@ -770,10 +776,12 @@
 
     function syncUserSession(username) {
       if (!username) return;
-      const userCash = cashSessions[username] || { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: 1 };
-      db.ref(`maki_app/cash_sessions/${username}`).set(userCash);
+      const uKey = username.toLowerCase();
+      const userCash = cashSessions[uKey] || { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: 1 };
+      db.ref(`maki_app/cash_sessions/${uKey}`).set(userCash);
     }
 
+    // SINCRONIZACIÓN SEGURA DE FIREBASE SIN SOBRESCRIBIR SESIONES LOCALES ACTIVAS
     db.ref('maki_app').on('value', (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -787,7 +795,14 @@
             users[u] = rawUsers[u];
           }
         }
-        cashSessions = data.cash_sessions || {};
+        
+        // Combinación inteligente para no perder las ventas actuales en memoria
+        const remoteSessions = data.cash_sessions || {};
+        for (let u in remoteSessions) {
+          if (!cashSessions[u] || (remoteSessions[u].totalIncome >= (cashSessions[u].totalIncome || 0))) {
+            cashSessions[u] = remoteSessions[u];
+          }
+        }
       } else {
         products = defaultProducts;
         users = { 
@@ -799,6 +814,7 @@
       }
       renderProducts();
       renderUsersList();
+      updateDashboard();
       document.getElementById('sync-status').textContent = "🟢 Conectado en Tiempo Real";
     }, (error) => {
       document.getElementById('sync-status').textContent = "🔴 Error de Conexión";
@@ -812,25 +828,22 @@
         tempActiveUser = user;
         isAdmin = (users[user].role === 'admin');
 
+        localStorage.setItem('maki_active_user', tempActiveUser);
+        localStorage.setItem('maki_user_role', isAdmin ? 'admin' : 'vendedor');
+
         document.getElementById('login-overlay').style.display = 'none';
 
         if (isAdmin) {
-          localStorage.setItem('maki_active_user', tempActiveUser);
-          localStorage.setItem('maki_user_role', 'admin');
           document.getElementById('cash-overlay').style.display = 'none';
           applyUserPermissions();
         } else {
           setTimeout(() => {
             const userSession = cashSessions[tempActiveUser];
-            // Si la caja está cerrada (initialCash es 0 o no existe), pedimos el fondo inicial y mostramos su folio actual
             if (!userSession || userSession.initialCash === undefined || userSession.initialCash === 0) {
               const currentFolio = (userSession && userSession.folio) ? userSession.folio : 1;
               document.getElementById('cash-modal-title').textContent = `Fondo de Caja Inicial (Folio #${currentFolio})`;
               document.getElementById('cash-overlay').style.display = 'flex';
             } else {
-              // Ya tiene caja abierta, entra directo sin pedir fondo de nuevo
-              localStorage.setItem('maki_active_user', tempActiveUser);
-              localStorage.setItem('maki_user_role', 'vendedor');
               applyUserPermissions();
             }
           }, 300);
@@ -847,6 +860,7 @@
     }
 
     function applyUserPermissions() {
+      const currentUser = getActiveUser();
       const metricsContainer = document.getElementById('dashboard-metrics-container');
       const btnExportExcel = document.getElementById('btn-export-excel');
       const btnAdminCreate = document.getElementById('btn-admin-create');
@@ -856,29 +870,41 @@
       const sellerCalc = document.getElementById('seller-calculator-section');
       const sellerCart = document.getElementById('seller-cart-section');
 
+      // Tarjetas exclusivas de admin
+      const box1 = document.getElementById('card-prod-count-box');
+      const box2 = document.getElementById('card-total-units-box');
+      const box3 = document.getElementById('card-inventory-val-box');
+
       if (isAdmin) {
-        metricsContainer.style.display = 'grid';
+        box1.style.display = 'block';
+        box2.style.display = 'block';
+        box3.style.display = 'block';
         btnExportExcel.style.display = 'inline-block';
         btnAdminCreate.style.display = 'inline-block';
         btnAdminUsers.style.display = 'inline-block';
-        panelTitle.textContent = `Panel de Administración y Surtido - Usuario: ${tempActiveUser.toUpperCase()}`;
+        panelTitle.textContent = `Panel de Administración y Surtido - Usuario: ${currentUser.toUpperCase()}`;
 
         sellerCalc.style.display = 'none';
         sellerCart.style.display = 'none';
       } else {
-        metricsContainer.style.display = 'none';
+        // Vendedor ve su panel de ventas y su tarjeta de ingresos del turno
+        box1.style.display = 'none';
+        box2.style.display = 'none';
+        box3.style.display = 'none';
         btnExportExcel.style.display = 'none';
         btnAdminCreate.style.display = 'none';
         btnAdminUsers.style.display = 'none';
-        panelTitle.textContent = `Panel de Ventas y Caja - Vendedor: ${tempActiveUser.toUpperCase()}`;
+        panelTitle.textContent = `Panel de Ventas y Caja - Vendedor: ${currentUser.toUpperCase()}`;
 
         sellerCalc.style.display = 'block';
         sellerCart.style.display = 'block';
       }
       renderProducts();
+      updateDashboard();
     }
 
     function completeLogin() {
+      const currentUser = getActiveUser();
       const initialCash = parseFloat(document.getElementById('initial-cash-input').value);
       if (isNaN(initialCash) || initialCash < 0) {
         alert("Por favor ingresa un monto válido para el fondo de caja.");
@@ -886,27 +912,27 @@
       }
 
       const now = new Date();
-      if (!cashSessions[tempActiveUser]) {
-        cashSessions[tempActiveUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: 1 };
+      if (!cashSessions[currentUser]) {
+        cashSessions[currentUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: 1 };
       }
 
-      cashSessions[tempActiveUser].initialCash = initialCash;
-      if (!cashSessions[tempActiveUser].attendance) {
-        cashSessions[tempActiveUser].attendance = [];
+      cashSessions[currentUser].initialCash = initialCash;
+      if (!cashSessions[currentUser].attendance) {
+        cashSessions[currentUser].attendance = [];
       }
 
-      const currentFolio = cashSessions[tempActiveUser].folio || 1;
+      const currentFolio = cashSessions[currentUser].folio || 1;
 
-      cashSessions[tempActiveUser].attendance.push({
+      cashSessions[currentUser].attendance.push({
         date: now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-        user: tempActiveUser,
+        user: currentUser,
         initialCash: initialCash,
         folio: currentFolio
       });
 
-      syncUserSession(tempActiveUser);
+      syncUserSession(currentUser);
 
-      localStorage.setItem('maki_active_user', tempActiveUser);
+      localStorage.setItem('maki_active_user', currentUser);
       localStorage.setItem('maki_user_role', 'vendedor');
 
       document.getElementById('cash-overlay').style.display = 'none';
@@ -973,6 +999,9 @@
     }
 
     function updateDashboard() {
+      const currentUser = getActiveUser();
+
+      // Métricas de Admin
       document.getElementById('dash-prod-count').textContent = products.length;
       
       const totalUnits = products
@@ -985,11 +1014,18 @@
         .reduce((sum, item) => sum + (Number(item.price) * Number(item.stock)), 0);
       document.getElementById('dash-inventory-val').textContent = `$${totalValue.toFixed(2)}`;
       
-      let globalIncome = 0;
-      for (let u in cashSessions) {
-        globalIncome += (cashSessions[u].totalIncome || 0);
+      // Ingresos del turno actual (para admin o vendedor)
+      let currentIncome = 0;
+      if (isAdmin) {
+        for (let u in cashSessions) {
+          currentIncome += (cashSessions[u].totalIncome || 0);
+        }
+      } else {
+        if (cashSessions[currentUser]) {
+          currentIncome = cashSessions[currentUser].totalIncome || 0;
+        }
       }
-      document.getElementById('dash-income-total').textContent = `$${globalIncome.toFixed(2)}`;
+      document.getElementById('dash-income-total').textContent = `$${currentIncome.toFixed(2)}`;
     }
 
     function saveNewProduct() {
@@ -1215,13 +1251,15 @@
       updateCartUI();
     }
 
+    // REGISTRO DE VENTAS ROBUSTO Y ACUMULATIVO
     function processDeductions() {
+      const currentUser = getActiveUser();
       let totalSale = 0;
       let itemsList = [];
       
       cart.forEach(item => {
         totalSale += item.price;
-        itemsList.push(item.name);
+        itemsList.push({ name: item.name, price: item.price });
         if (item.prodId !== null) {
           const prod = products.find(p => Number(p.id) === Number(item.prodId));
           if (prod && prod.category !== 'servicios' && prod.stock > 0) {
@@ -1230,18 +1268,19 @@
         }
       });
 
-      if (!cashSessions[tempActiveUser]) {
-        cashSessions[tempActiveUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: 1 };
+      if (!cashSessions[currentUser]) {
+        cashSessions[currentUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: 1 };
       }
 
-      cashSessions[tempActiveUser].totalIncome = (cashSessions[tempActiveUser].totalIncome || 0) + totalSale;
+      // Sumar de forma directa y segura
+      cashSessions[currentUser].totalIncome = Number((cashSessions[currentUser].totalIncome || 0) + totalSale);
 
       const now = new Date();
-      if (!cashSessions[tempActiveUser].salesHistory) {
-        cashSessions[tempActiveUser].salesHistory = [];
+      if (!cashSessions[currentUser].salesHistory) {
+        cashSessions[currentUser].salesHistory = [];
       }
 
-      cashSessions[tempActiveUser].salesHistory.push({
+      cashSessions[currentUser].salesHistory.push({
         date: now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
         items: itemsList,
         total: totalSale
@@ -1251,9 +1290,10 @@
       document.getElementById('cash-received').value = '';
       
       syncProductsAndUsers();
-      syncUserSession(tempActiveUser);
+      syncUserSession(currentUser);
 
       updateCartUI();
+      updateDashboard();
       return totalSale;
     }
 
@@ -1264,7 +1304,7 @@
       }
 
       const amount = processDeductions();
-      alert(`✅ ¡Venta registrada con éxito!\nSe cobraron $${amount.toFixed(2)} y se actualizó en tiempo real.`);
+      alert(`✅ ¡Venta registrada con éxito!\nSe cobraron $${amount.toFixed(2)} y se acumuló en caja.`);
     }
 
     function printTicket() {
@@ -1326,10 +1366,12 @@
     }
 
     function openClosureModal() {
-      const userSession = cashSessions[tempActiveUser] || { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: 1 };
+      const currentUser = getActiveUser();
+      const userSession = cashSessions[currentUser] || { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: 1 };
       const currentFolioNum = userSession.folio || 1;
+      const totalAcc = Number(userSession.totalIncome || 0);
 
-      if (confirm(`¿Estás seguro de cerrar la caja del día (Folio #${currentFolioNum})?\n\nAtendido por: ${tempActiveUser.toUpperCase()}\nTotal acumulado: $${(userSession.totalIncome || 0).toFixed(2)}\n\nEsto enviará el reporte moderno a tu correo y aumentará el folio en 1 para el siguiente turno.`)) {
+      if (confirm(`¿Estás seguro de cerrar la caja del día (Folio #${currentFolioNum})?\n\nAtendido por: ${currentUser.toUpperCase()}\nTotal acumulado: $${totalAcc.toFixed(2)}\n\nEsto enviará el reporte a tu correo y aumentará el folio en 1 para el siguiente turno.`)) {
         
         const attendanceList = userSession.attendance || [];
         const lastAttendance = attendanceList.length > 0 ? attendanceList[attendanceList.length - 1] : null;
@@ -1342,28 +1384,36 @@
         const closeTimeVal = new Date().toLocaleString();
         const userSalesHistory = userSession.salesHistory || [];
 
-        // Parámetros enviados a EmailJS incluyendo el número de folio
+        let formattedSummary = "Sin ventas registradas en este turno.";
+        if (userSalesHistory.length > 0) {
+          formattedSummary = userSalesHistory.map(s => {
+            if (!s.items || s.items.length === 0) return '';
+            return s.items.map(i => `
+              <div style="display: flex; justify-content: space-between; padding: 10px 14px; margin-bottom: 6px; background-color: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; font-family: 'Segoe UI', Tahoma, sans-serif;">
+                <span style="color: #2d3748; font-weight: 600; font-size: 14px;">🔹 ${i.name}</span>
+                <span style="color: #28a745; font-weight: bold; font-size: 14px;">$${Number(i.price).toFixed(2)}</span>
+              </div>
+            `).join('');
+          }).join('');
+        }
+
         const templateParams = {
           email: "hervinguillen8@gmail.com",
-          user: tempActiveUser.toUpperCase(),
+          user: currentUser.toUpperCase(),
           date: new Date().toLocaleDateString(),
           openTime: openTimeVal,
           closeTime: closeTimeVal,
           initialCash: initialCashVal,
           folio: currentFolioNum,
-          summaryText: userSalesHistory.length > 0 
-            ? userSalesHistory.map(s => `• [${s.date}] Productos: ${s.items.join(', ')} -> Subtotal: $${s.total.toFixed(2)}`).join('<br>')
-            : "Sin ventas registradas en este turno.",
-          totalIncome: (userSession.totalIncome || 0).toFixed(2)
+          summaryText: formattedSummary,
+          totalIncome: totalAcc.toFixed(2)
         };
 
         const resetSessionAndPromptLogin = () => {
-          // Incrementamos el folio en 1 para la siguiente apertura
           const nextFolio = currentFolioNum + 1;
-          cashSessions[tempActiveUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: nextFolio };
-          syncUserSession(tempActiveUser);
+          cashSessions[currentUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: nextFolio };
+          syncUserSession(currentUser);
 
-          // Limpiamos la sesión local para exigir contraseña de nuevo al reingresar
           localStorage.removeItem('maki_active_user');
           localStorage.removeItem('maki_user_role');
           
@@ -1377,10 +1427,10 @@
 
         emailjs.send("default_service", "template_iy8j3e2", templateParams)
           .then((response) => {
-             alert('🔒 Caja cerrada exitosamente. ¡El reporte moderno con su número de folio ha sido enviado a tu Gmail!');
+             alert('🔒 Caja cerrada exitosamente. ¡El reporte con el detalle de ventas ha sido enviado a tu Gmail!');
              resetSessionAndPromptLogin();
           }, (error) => {
-             alert('🔒 Caja cerrada, pero hubo un error al enviar el correo. Revisa tu conexión.');
+             alert('⚠️ Error al enviar el correo con EmailJS: ' + JSON.stringify(error));
              resetSessionAndPromptLogin();
           });
       }
