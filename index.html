@@ -9,6 +9,85 @@
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <style>
+    /* Keyframes de Animaciones */
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.85) translateY(-20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.9); opacity: 0; }
+      70% { transform: scale(1.03); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(25px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 4px 15px rgba(199,233,192,0.4); }
+      50% { box-shadow: 0 6px 22px rgba(199,233,192,0.8); }
+      100% { box-shadow: 0 4px 15px rgba(199,233,192,0.4); }
+    }
+
+    @keyframes ticketPrint {
+      0% { opacity: 0; transform: translateY(-40px) scaleY(0.2); }
+      100% { opacity: 1; transform: translateY(0) scaleY(1); }
+    }
+
+    /* Variables de la Paleta Pastel (Modo Claro) */
+    :root {
+      --pastel-rosa: #FFB7B2;
+      --pastel-durazno: #F5D6C6;
+      --pastel-crema: #FCEECB;
+      --pastel-amarillo: #FAF0CA;
+      --pastel-lima: #E2F0D9;
+      --pastel-verde: #C7E9C0;
+      --pastel-hielo: #E0F2F1;
+      --pastel-cyan: #B2EBF2;
+      --pastel-azul: #AEC6CF;
+      --pastel-lavanda: #C5CAE9;
+      --pastel-lila: #E1BEE7;
+      --pastel-malva: #F8BBD0;
+
+      --bg-principal: linear-gradient(135deg, #FAF7F2 0%, #F5EBE6 100%);
+      --bg-tarjeta: #ffffff;
+      --bg-modal: #ffffff;
+      --bg-secundario: #FAF7F2;
+      --texto-principal: #4A4A4A;
+      --texto-secundario: #555555;
+      --borde-suave: #F5D6C6;
+      --shadow-tarjeta: 0 6px 16px rgba(0, 0, 0, 0.05);
+      --navbar-bg: linear-gradient(135deg, #FFB7B2 0%, #E1BEE7 50%, #AEC6CF 100%);
+      --navbar-text: #333333;
+      --glow-card: transparent;
+    }
+
+    /* Sobreescritura de Variables (Modo Oscuro Pastel Vibrante / Cyber-Pastel) */
+    body.dark-mode {
+      --bg-principal: linear-gradient(135deg, #0F0E17 0%, #1A192B 50%, #13111C 100%);
+      --bg-tarjeta: #161524;
+      --bg-modal: #1D1B2E;
+      --bg-secundario: #232038;
+      --texto-principal: #F1F5F9;
+      --texto-secundario: #CBD5E1;
+      --borde-suave: rgba(225, 190, 231, 0.25);
+      --shadow-tarjeta: 0 8px 24px rgba(0, 0, 0, 0.45);
+      --navbar-bg: linear-gradient(135deg, #3B1C32 0%, #2A1F45 50%, #1C2D42 100%);
+      --navbar-text: #FFFFFF;
+      --glow-card: 0 0 15px rgba(225, 190, 231, 0.12);
+
+      --pastel-rosa: #FF8BA7;
+      --pastel-verde: #86EFAC;
+      --pastel-azul: #93C5FD;
+      --pastel-lila: #C084FC;
+      --pastel-durazno: #FDBA74;
+      --pastel-cyan: #67E8F9;
+      --pastel-amarillo: #FDE047;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -17,20 +96,22 @@
     }
 
     body {
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
-      color: #333;
+      background: var(--bg-principal);
+      color: var(--texto-principal);
       padding-bottom: 80px;
       min-height: 100vh;
+      transition: background 0.4s ease, color 0.4s ease;
     }
 
-    /* Modales de Acceso */
+    /* Modales de Acceso con Animación */
     .modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -39,46 +120,74 @@
     }
 
     .modal-card {
-      background: white;
-      padding: 25px;
-      border-radius: 16px;
+      background: var(--bg-modal);
+      padding: 28px;
+      border-radius: 24px;
       width: 100%;
-      max-width: 380px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      max-width: 390px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+      border: 2px solid var(--borde-suave);
+      color: var(--texto-principal);
+      animation: modalFadeIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     .modal-card h2 {
-      color: #4e54c8;
+      color: var(--pastel-lila);
       margin-bottom: 15px;
-      font-size: 1.4rem;
+      font-size: 1.45rem;
       text-align: center;
     }
 
-    /* Header con Colorido Gradiente */
+    /* Header Pastel Gradiente con Botón de Tema */
     .navbar {
-      background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
-      color: white;
+      background: var(--navbar-bg);
+      color: var(--navbar-text);
       text-align: center;
       padding: 22px 15px;
       position: sticky;
       top: 0;
       z-index: 100;
-      box-shadow: 0 4px 15px rgba(78,84,200,0.3);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.4s ease;
     }
 
+    .navbar-title { flex: 1; }
+    .navbar h1 { color: var(--navbar-text); }
     .navbar h1 span {
-      color: #ffd700;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      color: #FF7A00;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .theme-toggle-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: var(--navbar-text);
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.9rem;
+      backdrop-filter: blur(6px);
+      transition: all 0.25s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.35);
+      transform: scale(1.08);
     }
 
     .sync-status {
       font-size: 0.8rem;
       margin-top: 6px;
       opacity: 0.95;
-      background: rgba(255,255,255,0.2);
+      background: rgba(255, 255, 255, 0.2);
+      color: var(--navbar-text);
       display: inline-block;
-      padding: 2px 10px;
+      padding: 3px 12px;
       border-radius: 12px;
+      font-weight: 600;
     }
 
     .container {
@@ -96,22 +205,26 @@
     }
 
     .dash-card {
-      background: white;
+      background: var(--bg-tarjeta);
       padding: 18px;
-      border-radius: 14px;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.06);
-      border-left: 6px solid #4e54c8;
-      transition: transform 0.2s;
+      border-radius: 18px;
+      box-shadow: var(--shadow-tarjeta);
+      border-left: 6px solid var(--pastel-azul);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      animation: popIn 0.4s ease-out;
     }
-    .dash-card:hover { transform: translateY(-3px); }
+    .dash-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
 
-    .dash-card.green { border-left-color: #28a745; }
-    .dash-card.orange { border-left-color: #fd7e14; }
-    .dash-card.purple { border-left-color: #6f42c1; }
+    .dash-card.green { border-left-color: var(--pastel-verde); }
+    .dash-card.orange { border-left-color: var(--pastel-durazno); }
+    .dash-card.purple { border-left-color: var(--pastel-lila); }
 
     .dash-card h4 {
       font-size: 0.85rem;
-      color: #6c757d;
+      color: var(--texto-secundario);
       margin-bottom: 5px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -120,15 +233,15 @@
     .dash-card .number {
       font-size: 1.6rem;
       font-weight: bold;
-      color: #212529;
+      color: var(--texto-principal);
     }
 
     /* Barra de Control */
     .admin-bar {
-      background: white;
+      background: var(--bg-tarjeta);
       padding: 18px;
-      border-radius: 14px;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.06);
+      border-radius: 18px;
+      box-shadow: var(--shadow-tarjeta);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -144,25 +257,25 @@
     }
 
     .btn-action {
-      background: #4e54c8;
-      color: white;
+      background: var(--pastel-azul);
+      color: #161524;
       border: none;
       padding: 10px 18px;
-      border-radius: 10px;
+      border-radius: 12px;
       font-weight: bold;
       cursor: pointer;
       font-size: 0.9rem;
-      box-shadow: 0 4px 10px rgba(78,84,200,0.2);
-      transition: all 0.2s;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+      transition: all 0.2s ease;
     }
-    .btn-action:hover { opacity: 0.95; transform: translateY(-2px); }
+    .btn-action:hover { opacity: 0.9; transform: translateY(-2px); }
 
-    .btn-create { background: #28a745; box-shadow: 0 4px 10px rgba(40,167,69,0.2); }
-    .btn-users { background: #17a2b8; color: white; box-shadow: 0 4px 10px rgba(23,162,184,0.2); }
-    .btn-excel { background: #20c997; box-shadow: 0 4px 10px rgba(32,201,151,0.2); }
-    .btn-logout { background: #dc3545; box-shadow: 0 4px 10px rgba(220,53,69,0.2); }
+    .btn-create { background: var(--pastel-verde); color: #0F3822; }
+    .btn-users { background: var(--pastel-cyan); color: #053B34; }
+    .btn-excel { background: var(--pastel-lima); color: #1E4627; }
+    .btn-logout { background: var(--pastel-rosa); color: #5C0E18; }
 
-    /* Buscador Colorido */
+    /* Buscador */
     .search-box {
       width: 100%;
       margin-bottom: 15px;
@@ -171,19 +284,21 @@
     .search-box input {
       width: 100%;
       padding: 14px 18px;
-      border-radius: 12px;
-      border: 2px solid #e0e4ef;
+      border-radius: 16px;
+      border: 2px solid var(--borde-suave);
       font-size: 1rem;
-      background: white;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-      transition: border-color 0.2s;
+      background: var(--bg-tarjeta);
+      color: var(--texto-principal);
+      box-shadow: var(--shadow-tarjeta);
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
     }
     .search-box input:focus {
       outline: none;
-      border-color: #4e54c8;
+      border-color: var(--pastel-lila);
+      box-shadow: 0 0 12px rgba(192, 132, 252, 0.3);
     }
 
-    /* Categorías Coloridas */
+    /* Categorías */
     .category-menu {
       display: flex;
       gap: 12px;
@@ -193,26 +308,27 @@
     }
 
     .cat-btn {
-      background: white;
-      border: 2px solid #e0e4ef;
-      color: #4e54c8;
+      background: var(--bg-tarjeta);
+      border: 2px solid var(--borde-suave);
+      color: var(--texto-principal);
       padding: 10px 20px;
       border-radius: 25px;
       font-weight: bold;
       cursor: pointer;
       white-space: nowrap;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-      transition: all 0.2s;
+      box-shadow: var(--shadow-tarjeta);
+      transition: all 0.25s ease;
     }
 
     .cat-btn.active, .cat-btn:hover {
-      background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
-      color: white;
+      background: linear-gradient(135deg, var(--pastel-rosa) 0%, var(--pastel-durazno) 100%);
+      color: #161524;
       border-color: transparent;
-      box-shadow: 0 6px 15px rgba(78,84,200,0.3);
+      box-shadow: 0 4px 15px rgba(255,139,167,0.35);
+      transform: translateY(-2px);
     }
 
-    /* Grilla de Productos con Estilo Vibrante */
+    /* Grilla de Productos Animados */
     .products-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
@@ -221,55 +337,61 @@
     }
 
     .product-card {
-      background: white;
-      border-radius: 16px;
+      background: var(--bg-tarjeta);
+      border-radius: 20px;
       padding: 18px;
       text-align: center;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+      box-shadow: var(--shadow-tarjeta);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       border: 2px solid transparent;
-      transition: all 0.2s;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      animation: popIn 0.35s ease-out;
     }
     .product-card:hover {
-      border-color: #8f94fb;
-      transform: translateY(-4px);
+      border-color: var(--pastel-lila);
+      transform: translateY(-5px);
+      box-shadow: var(--glow-card), 0 10px 20px rgba(0,0,0,0.2);
     }
 
     .product-icon {
       font-size: 2.8rem;
       margin-bottom: 8px;
+      transition: transform 0.25s ease;
+    }
+    .product-card:hover .product-icon {
+      transform: scale(1.12) rotate(4deg);
     }
 
     .product-title {
       font-size: 1.05rem;
       font-weight: bold;
       margin-bottom: 6px;
-      color: #2c3e50;
+      color: var(--texto-principal);
     }
 
     .product-price {
-      color: #28a745;
+      color: var(--pastel-verde);
       font-weight: bold;
-      font-size: 1.2rem;
+      font-size: 1.25rem;
       margin-bottom: 6px;
     }
 
     .product-stock {
       font-size: 0.85rem;
-      color: #495057;
+      color: var(--texto-secundario);
       margin-bottom: 12px;
-      background: #f1f3f9;
-      padding: 5px 10px;
-      border-radius: 8px;
+      background: var(--bg-secundario);
+      padding: 5px 12px;
+      border-radius: 12px;
       display: inline-block;
       font-weight: 500;
     }
 
     .product-stock.out {
-      background: #ffe3e3;
-      color: #c92a2a;
+      background: var(--pastel-rosa);
+      color: #5C0E18;
       font-weight: bold;
     }
 
@@ -280,74 +402,84 @@
     }
 
     .add-btn {
-      background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
-      color: white;
+      background: linear-gradient(135deg, var(--pastel-azul) 0%, var(--pastel-lila) 100%);
+      color: #161524;
       border: none;
       padding: 12px;
-      border-radius: 10px;
+      border-radius: 12px;
       font-weight: bold;
       cursor: pointer;
       font-size: 1rem;
-      box-shadow: 0 4px 12px rgba(78,84,200,0.3);
-      transition: opacity 0.2s;
+      box-shadow: 0 4px 12px rgba(147,197,253,0.3);
+      transition: all 0.2s ease;
     }
-    .add-btn:hover { opacity: 0.9; }
+    .add-btn:hover { opacity: 0.92; transform: scale(1.02); }
+    .add-btn:active { transform: scale(0.97); }
 
     .add-btn:disabled {
-      background: #ced4da;
+      background: #3A3852;
+      color: #777;
       box-shadow: none;
       cursor: not-allowed;
     }
 
     .sell-btn {
-      background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);
-      color: white;
+      background: linear-gradient(135deg, var(--pastel-verde) 0%, #A8E6CF 100%);
+      color: #0F3822;
       border: none;
       padding: 14px;
-      border-radius: 12px;
+      border-radius: 14px;
       font-weight: bold;
       cursor: pointer;
       font-size: 1.1rem;
       width: 100%;
-      box-shadow: 0 4px 15px rgba(40,167,69,0.3);
+      box-shadow: 0 4px 15px rgba(134,239,172,0.35);
+      animation: pulseGlow 3s infinite;
+      transition: all 0.2s ease;
     }
+    .sell-btn:active { transform: scale(0.98); }
 
     .edit-btn {
-      background: #ffc107;
-      color: #333;
+      background: var(--pastel-amarillo);
+      color: #4A3B00;
       border: none;
       padding: 8px;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 0.85rem;
       font-weight: bold;
       cursor: pointer;
-      box-shadow: 0 2px 6px rgba(255,193,7,0.3);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      transition: transform 0.2s;
     }
+    .edit-btn:hover { transform: translateY(-1px); }
 
     .delete-btn {
-      background: #dc3545;
-      color: white;
+      background: var(--pastel-rosa);
+      color: #5C0E18;
       border: none;
       padding: 8px;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 0.85rem;
       font-weight: bold;
       cursor: pointer;
-      box-shadow: 0 2px 6px rgba(220,53,69,0.3);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      transition: transform 0.2s;
     }
+    .delete-btn:hover { transform: translateY(-1px); }
 
     /* Cajones Plegables */
     .modal-form {
-      background: white;
+      background: var(--bg-tarjeta);
       padding: 24px;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      border-radius: 20px;
+      box-shadow: var(--shadow-tarjeta);
       margin-bottom: 25px;
       display: none;
-      border-top: 5px solid #4e54c8;
+      border-top: 5px solid var(--pastel-lila);
+      animation: popIn 0.3s ease-out;
     }
 
-    .modal-form h3 { color: #4e54c8; margin-bottom: 15px; }
+    .modal-form h3 { color: var(--pastel-lila); margin-bottom: 15px; }
 
     .form-group {
       margin-bottom: 15px;
@@ -356,16 +488,18 @@
       gap: 6px;
     }
 
-    .form-group label { font-weight: bold; font-size: 0.9rem; color: #495057; }
+    .form-group label { font-weight: bold; font-size: 0.9rem; color: var(--texto-secundario); }
     .form-group input, .form-group select {
       padding: 12px;
-      border: 2px solid #e0e4ef;
-      border-radius: 10px;
+      border: 2px solid var(--borde-suave);
+      border-radius: 12px;
       font-size: 1rem;
+      background: var(--bg-secundario);
+      color: var(--texto-principal);
     }
     .form-group input:focus, .form-group select:focus {
       outline: none;
-      border-color: #4e54c8;
+      border-color: var(--pastel-lila);
     }
 
     .form-buttons {
@@ -383,63 +517,65 @@
 
     /* Cotizador y Carrito Colorido */
     .calculator-section {
-      background: white;
+      background: var(--bg-tarjeta);
       padding: 24px;
-      border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+      border-radius: 20px;
+      box-shadow: var(--shadow-tarjeta);
       margin-bottom: 25px;
-      border-left: 5px solid #ffc107;
+      border-left: 6px solid var(--pastel-crema);
+      animation: popIn 0.35s ease-out;
     }
 
-    .calculator-section h2 { color: #d39e00; margin-bottom: 15px; }
+    .calculator-section h2 { color: var(--pastel-amarillo); margin-bottom: 15px; }
     .calc-box { display: flex; flex-direction: column; gap: 12px; }
 
     .cart-section {
-      background: linear-gradient(135deg, #ffffff 0%, #f8f9fe 100%);
+      background: var(--bg-tarjeta);
       padding: 24px;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      border-radius: 20px;
+      box-shadow: var(--shadow-tarjeta);
       margin-bottom: 30px;
-      border: 2px solid #e0e4ef;
+      border: 2px solid var(--borde-suave);
+      animation: popIn 0.35s ease-out;
     }
 
-    .cart-section h2 { color: #4e54c8; margin-bottom: 15px; }
+    .cart-section h2 { color: var(--pastel-lila); margin-bottom: 15px; }
     .cart-items { list-style: none; margin-bottom: 15px; }
 
     .cart-item {
       display: flex;
       justify-content: space-between;
       padding: 10px 0;
-      border-bottom: 1px dashed #ced4da;
+      border-bottom: 1px dashed var(--borde-suave);
       font-weight: 500;
+      animation: slideInRight 0.25s ease-out;
     }
 
     .cart-total {
-      font-size: 1.3rem;
+      font-size: 1.35rem;
       font-weight: bold;
       text-align: right;
-      color: #28a745;
+      color: var(--pastel-verde);
       margin-bottom: 18px;
     }
 
     .change-box {
-      background: #fff;
+      background: var(--bg-secundario);
       padding: 18px;
-      border-radius: 12px;
+      border-radius: 14px;
       margin-bottom: 18px;
       display: flex;
       flex-direction: column;
       gap: 8px;
-      border: 2px solid #e0e4ef;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+      border: 2px solid var(--borde-suave);
     }
 
-    .change-box label { font-weight: bold; font-size: 0.9rem; color: #495057; }
+    .change-box label { font-weight: bold; font-size: 0.9rem; color: var(--texto-secundario); }
 
     .change-display {
       font-size: 1.4rem;
       font-weight: bold;
-      color: #4e54c8;
+      color: var(--pastel-lila);
     }
 
     .action-buttons-group {
@@ -449,23 +585,25 @@
     }
 
     .btn-ticket {
-      background: linear-gradient(135deg, #17a2b8 0%, #3bcdde 100%);
-      color: white;
+      background: linear-gradient(135deg, var(--pastel-cyan) 0%, var(--pastel-azul) 100%);
+      color: #053B34;
       padding: 14px;
-      border-radius: 12px;
+      border-radius: 14px;
       border: none;
       font-weight: bold;
       cursor: pointer;
       font-size: 1.05rem;
       width: 100%;
-      box-shadow: 0 4px 15px rgba(23,162,184,0.3);
+      box-shadow: 0 4px 12px rgba(103,232,249,0.3);
+      transition: transform 0.2s;
     }
+    .btn-ticket:hover { transform: translateY(-2px); }
 
     footer {
       text-align: center;
       padding: 20px;
-      background: #212529;
-      color: white;
+      background: #0F0E17;
+      color: #A0AEC0;
       font-size: 0.9rem;
     }
   </style>
@@ -492,7 +630,7 @@
   <div id="cash-overlay" class="modal-overlay" style="display: none;">
     <div class="modal-card">
       <h2 id="cash-modal-title">Fondo de Caja Inicial (Folio #1)</h2>
-      <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px; text-align: center;">¿Con cuánto dinero efectivo inicia la caja hoy?</p>
+      <p style="font-size: 0.9rem; color: var(--texto-secundario); margin-bottom: 15px; text-align: center;">¿Con cuánto dinero efectivo inicia la caja hoy?</p>
       <div class="form-group">
         <label>Efectivo en Caja ($):</label>
         <input type="number" id="initial-cash-input" placeholder="0.00" step="0.50">
@@ -502,14 +640,20 @@
   </div>
 
   <header class="navbar">
-    <h1>Papelería <span>Maki</span></h1>
-    <p id="system-subtitle">Sistema Empresarial</p>
-    <div class="sync-status" id="sync-status">🟢 Conectado en Tiempo Real</div>
+    <div style="width: 100px;"></div>
+    <div class="navbar-title">
+      <h1>Papelería <span>Maki</span></h1>
+      <p id="system-subtitle" style="font-size:0.9rem; opacity:0.9;">Sistema Empresarial</p>
+      <div class="sync-status" id="sync-status">🟢 Conectado en Tiempo Real</div>
+    </div>
+    <div style="width: 100px; text-align: right;">
+      <button class="theme-toggle-btn" id="theme-btn" onclick="toggleTheme()">🌙 Oscuro</button>
+    </div>
   </header>
 
   <main class="container">
 
-    <!-- Panel de Métricas / Ingresos del Día (Visible para Dueño y Vendedores) -->
+    <!-- Panel de Métricas / Ingresos del Día -->
     <div class="dashboard-grid" id="dashboard-metrics-container">
       <div class="dash-card orange" id="card-prod-count-box">
         <h4>Tipos de Productos</h4>
@@ -531,7 +675,7 @@
 
     <!-- Barra de Control Empresarial -->
     <div class="admin-bar" id="admin-bar-container">
-      <h2 style="color: #4e54c8; font-size: 1.1rem; margin: 0;" id="panel-title-text">Panel de Operaciones</h2>
+      <h2 style="color: var(--pastel-lila); font-size: 1.1rem; margin: 0;" id="panel-title-text">Panel de Operaciones</h2>
       <div class="admin-actions">
         <button class="btn-action btn-excel" id="btn-export-excel" onclick="exportInventoryExcel()" style="display: none;">📊 Descargar Excel (Stock)</button>
         <button class="btn-action btn-create" id="btn-admin-create" onclick="toggleSection('new-product-form')" style="display: none;">➕ Surtir / Nuevo Item</button>
@@ -630,7 +774,7 @@
       <div class="form-buttons">
         <button class="btn-action btn-create" onclick="saveNewUser()">Registrar Usuario</button>
       </div>
-      <div style="margin-top: 15px; font-size: 0.9rem; color: #555;">
+      <div style="margin-top: 15px; font-size: 0.9rem; color: var(--texto-secundario);">
         <strong>Usuarios registrados en la empresa:</strong>
         <div id="users-list-container" style="margin-top: 5px; font-weight: normal;"></div>
       </div>
@@ -675,7 +819,7 @@
     <section class="cart-section" id="seller-cart-section">
       <h2>🛒 Pedido Actual</h2>
       <ul class="cart-items" id="cart-items-list">
-        <li style="color: #6c757d;">No has agregado productos aún.</li>
+        <li style="color: var(--texto-secundario);">No has agregado productos aún.</li>
       </ul>
       <div class="cart-total">Total: $<span id="cart-total-price">0.00</span></div>
 
@@ -689,7 +833,7 @@
       <div class="action-buttons-group">
         <button class="sell-btn" onclick="checkoutDirectSale()">🛍️ Registrar Venta Directa en Mostrador</button>
         <button class="btn-ticket" onclick="printTicket()">🧾 Imprimir / Generar Ticket de Venta</button>
-        <button class="sell-btn" style="background: linear-gradient(135deg, #fd7e14 0%, #ffa94d 100%); margin-top: 10px; box-shadow: 0 4px 15px rgba(253,126,20,0.3);" onclick="openClosureModal()">🔒 Cerrar Caja del Día</button>
+        <button class="sell-btn" style="background: linear-gradient(135deg, var(--pastel-durazno) 0%, var(--pastel-rosa) 100%); color: #5C0E18; margin-top: 10px; box-shadow: 0 4px 12px rgba(255,139,167,0.4);" onclick="openClosureModal()">🔒 Cerrar Caja del Día</button>
       </div>
     </section>
 
@@ -749,6 +893,30 @@
     let tempActiveUser = '';
     let isAdmin = false;
 
+    // LÓGICA DE TEMA CLARO / OSCURO
+    function initTheme() {
+      const savedTheme = localStorage.getItem('maki_theme') || 'light';
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('theme-btn').textContent = '☀️ Claro';
+      } else {
+        document.body.classList.remove('dark-mode');
+        document.getElementById('theme-btn').textContent = '🌙 Oscuro';
+      }
+    }
+
+    function toggleTheme() {
+      const isDark = document.body.classList.toggle('dark-mode');
+      const themeBtn = document.getElementById('theme-btn');
+      if (isDark) {
+        localStorage.setItem('maki_theme', 'dark');
+        themeBtn.textContent = '☀️ Claro';
+      } else {
+        localStorage.setItem('maki_theme', 'light');
+        themeBtn.textContent = '🌙 Oscuro';
+      }
+    }
+
     function getActiveUser() {
       if (!tempActiveUser || tempActiveUser === "" || tempActiveUser === "usuario") {
         tempActiveUser = localStorage.getItem('maki_active_user') || 'hiromi';
@@ -757,6 +925,8 @@
     }
 
     window.onload = function() {
+      initTheme();
+
       const savedUser = localStorage.getItem('maki_active_user');
       const savedRole = localStorage.getItem('maki_user_role');
 
@@ -781,7 +951,6 @@
       db.ref(`maki_app/cash_sessions/${uKey}`).set(userCash);
     }
 
-    // SINCRONIZACIÓN SEGURA DE FIREBASE SIN SOBRESCRIBIR SESIONES LOCALES ACTIVAS
     db.ref('maki_app').on('value', (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -796,7 +965,6 @@
           }
         }
         
-        // Combinación inteligente para no perder las ventas actuales en memoria
         const remoteSessions = data.cash_sessions || {};
         for (let u in remoteSessions) {
           if (!cashSessions[u] || (remoteSessions[u].totalIncome >= (cashSessions[u].totalIncome || 0))) {
@@ -861,7 +1029,6 @@
 
     function applyUserPermissions() {
       const currentUser = getActiveUser();
-      const metricsContainer = document.getElementById('dashboard-metrics-container');
       const btnExportExcel = document.getElementById('btn-export-excel');
       const btnAdminCreate = document.getElementById('btn-admin-create');
       const btnAdminUsers = document.getElementById('btn-admin-users');
@@ -870,7 +1037,6 @@
       const sellerCalc = document.getElementById('seller-calculator-section');
       const sellerCart = document.getElementById('seller-cart-section');
 
-      // Tarjetas exclusivas de admin
       const box1 = document.getElementById('card-prod-count-box');
       const box2 = document.getElementById('card-total-units-box');
       const box3 = document.getElementById('card-inventory-val-box');
@@ -887,7 +1053,6 @@
         sellerCalc.style.display = 'none';
         sellerCart.style.display = 'none';
       } else {
-        // Vendedor ve su panel de ventas y su tarjeta de ingresos del turno
         box1.style.display = 'none';
         box2.style.display = 'none';
         box3.style.display = 'none';
@@ -961,8 +1126,8 @@
       if (!container) return;
       container.innerHTML = Object.keys(users).map(u => {
         const roleName = users[u].role === 'admin' ? '⭐ Dueño (Admin)' : '👤 Vendedor';
-        const deleteOption = (u !== 'hervin') ? `<button onclick="deleteUser('${u}')" style="background:#dc3545; color:white; border:none; padding:2px 6px; border-radius:4px; margin-left:8px; cursor:pointer; font-size:0.75rem;">Eliminar</button>` : '';
-        return `<div style="background:#f1f3f9; padding:8px 12px; border-radius:8px; margin:6px 0; display:flex; justify-content:space-between; align-items:center;"><span><strong>${u}</strong> (${roleName})</span> ${deleteOption}</div>`;
+        const deleteOption = (u !== 'hervin') ? `<button onclick="deleteUser('${u}')" style="background:var(--pastel-rosa); color:#5C0E18; border:none; padding:2px 8px; border-radius:6px; margin-left:8px; cursor:pointer; font-size:0.75rem; font-weight:bold;">Eliminar</button>` : '';
+        return `<div style="background:var(--bg-secundario); padding:8px 12px; border-radius:10px; margin:6px 0; display:flex; justify-content:space-between; align-items:center; border: 1px solid var(--borde-suave); animation: slideInRight 0.2s;"><span><strong>${u}</strong> (${roleName})</span> ${deleteOption}</div>`;
       }).join('');
     }
 
@@ -1001,7 +1166,6 @@
     function updateDashboard() {
       const currentUser = getActiveUser();
 
-      // Métricas de Admin
       document.getElementById('dash-prod-count').textContent = products.length;
       
       const totalUnits = products
@@ -1014,7 +1178,6 @@
         .reduce((sum, item) => sum + (Number(item.price) * Number(item.stock)), 0);
       document.getElementById('dash-inventory-val').textContent = `$${totalValue.toFixed(2)}`;
       
-      // Ingresos del turno actual (para admin o vendedor)
       let currentIncome = 0;
       if (isAdmin) {
         for (let u in cashSessions) {
@@ -1096,7 +1259,7 @@
       <h2>Reporte de Existencias - Papelería Maki (Papelería y Cómputo)</h2>
       <table border="1">
         <thead>
-          <tr style="background-color: #4e54c8; color: white;">
+          <tr style="background-color: #AEC6CF; color: #333;">
             <th>Nombre del Producto</th>
             <th>Categoría</th>
             <th>Existencia (Stock)</th>
@@ -1136,9 +1299,10 @@
         return matchesCategory && matchesSearch;
       });
 
-      filtered.forEach(product => {
+      filtered.forEach((product, idx) => {
         const card = document.createElement('div');
         card.className = 'product-card';
+        card.style.animationDelay = `${idx * 0.04}s`;
         const isService = product.category === 'servicios';
         const isOut = !isService && product.stock <= 0;
         
@@ -1185,6 +1349,8 @@
       }
 
       cart.push({ prodId: prod.id, name: prod.name, price: Number(prod.price) });
+      
+      // Actualiza la interfaz de inmediato evitando clics dobles
       updateCartUI();
     }
 
@@ -1204,7 +1370,7 @@
       const totalDisplay = document.getElementById('cart-total-price');
 
       if (cart.length === 0) {
-        list.innerHTML = '<li style="color: #6c757d;">No has agregado productos aún.</li>';
+        list.innerHTML = '<li style="color: var(--texto-secundario);">No has agregado productos aún.</li>';
         totalDisplay.textContent = '0.00';
         calculateChange();
         return;
@@ -1219,7 +1385,7 @@
         li.className = 'cart-item';
         li.innerHTML = `
           <span>${item.name}</span>
-          <span>$${item.price.toFixed(2)} <button onclick="removeFromCart(${index})" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">✕</button></span>
+          <span>$${item.price.toFixed(2)} <button onclick="removeFromCart(${index})" style="color:var(--pastel-rosa); background:none; border:none; cursor:pointer; font-weight:bold; margin-left:6px;">✕</button></span>
         `;
         list.appendChild(li);
       });
@@ -1236,13 +1402,13 @@
       const changeDisplay = document.getElementById('change-amount');
       if (cash > 0 && change >= 0) {
         changeDisplay.textContent = change.toFixed(2);
-        changeDisplay.style.color = '#28a745';
+        changeDisplay.style.color = 'var(--pastel-verde)';
       } else if (cash > 0 && change < 0) {
         changeDisplay.textContent = 'Faltan $' + Math.abs(change).toFixed(2);
-        changeDisplay.style.color = '#dc3545';
+        changeDisplay.style.color = 'var(--pastel-rosa)';
       } else {
         changeDisplay.textContent = '0.00';
-        changeDisplay.style.color = '#4e54c8';
+        changeDisplay.style.color = 'var(--pastel-lila)';
       }
     }
 
@@ -1251,7 +1417,6 @@
       updateCartUI();
     }
 
-    // REGISTRO DE VENTAS ROBUSTO Y ACUMULATIVO
     function processDeductions() {
       const currentUser = getActiveUser();
       let totalSale = 0;
@@ -1272,7 +1437,6 @@
         cashSessions[currentUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: 1 };
       }
 
-      // Sumar de forma directa y segura
       cashSessions[currentUser].totalIncome = Number((cashSessions[currentUser].totalIncome || 0) + totalSale);
 
       const now = new Date();
@@ -1318,7 +1482,7 @@
       let total = 0;
 
       let ticketContent = `
-        <div style="font-family: monospace; width: 280px; padding: 10px;">
+        <div style="font-family: monospace; width: 280px; padding: 10px; color: #000; animation: ticketPrint 0.6s ease-out; transform-origin: top center;">
           <h2 style="text-align: center; margin-bottom: 2px;">PAPELERÍA MAKI</h2>
           <p style="text-align: center; font-size: 0.8rem; margin-bottom: 10px;">Ticket de Venta Directa<br>${now.toLocaleDateString()} ${now.toLocaleTimeString()}</p>
           <hr style="border-top: 1px dashed #000;">
