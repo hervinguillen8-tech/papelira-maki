@@ -3,37 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Papelería Maki - Control Empresarial</title>
+  <title>Papelería Maki - Control Empresarial Avanzado</title>
   
   <!-- SDK de EmailJS -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <!-- Chart.js para Estadísticas de Administrador -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     /* Keyframes de Animaciones */
     @keyframes modalFadeIn {
-      from { opacity: 0; transform: scale(0.85) translateY(-20px); }
+      from { opacity: 0; transform: scale(0.88) translateY(-20px); }
       to { opacity: 1; transform: scale(1) translateY(0); }
     }
 
     @keyframes popIn {
-      0% { transform: scale(0.9); opacity: 0; }
-      70% { transform: scale(1.03); }
+      0% { transform: scale(0.92); opacity: 0; }
+      70% { transform: scale(1.02); }
       100% { transform: scale(1); opacity: 1; }
     }
 
     @keyframes slideInRight {
-      from { opacity: 0; transform: translateX(25px); }
+      from { opacity: 0; transform: translateX(20px); }
       to { opacity: 1; transform: translateX(0); }
     }
 
     @keyframes pulseGlow {
       0% { box-shadow: 0 4px 15px rgba(199,233,192,0.4); }
-      50% { box-shadow: 0 6px 22px rgba(199,233,192,0.8); }
+      50% { box-shadow: 0 6px 22px rgba(199,233,192,0.85); }
       100% { box-shadow: 0 4px 15px rgba(199,233,192,0.4); }
     }
 
+    @keyframes alertPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
     @keyframes ticketPrint {
-      0% { opacity: 0; transform: translateY(-40px) scaleY(0.2); }
+      0% { opacity: 0; transform: translateY(-30px) scaleY(0.3); }
       100% { opacity: 1; transform: translateY(0) scaleY(1); }
     }
 
@@ -63,9 +71,11 @@
       --navbar-bg: linear-gradient(135deg, #FFB7B2 0%, #E1BEE7 50%, #AEC6CF 100%);
       --navbar-text: #333333;
       --glow-card: transparent;
+      --badge-warning-bg: #FFF3CD;
+      --badge-warning-text: #856404;
     }
 
-    /* Sobreescritura de Variables (Modo Oscuro Pastel Vibrante / Cyber-Pastel) */
+    /* Variables (Modo Oscuro Cyber-Pastel) */
     body.dark-mode {
       --bg-principal: linear-gradient(135deg, #0F0E17 0%, #1A192B 50%, #13111C 100%);
       --bg-tarjeta: #161524;
@@ -86,13 +96,15 @@
       --pastel-durazno: #FDBA74;
       --pastel-cyan: #67E8F9;
       --pastel-amarillo: #FDE047;
+      --badge-warning-bg: #423505;
+      --badge-warning-text: #FDE047;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
     body {
@@ -103,7 +115,7 @@
       transition: background 0.4s ease, color 0.4s ease;
     }
 
-    /* Modales de Acceso con Animación */
+    /* Modales y Capas Overlays */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -121,14 +133,20 @@
 
     .modal-card {
       background: var(--bg-modal);
-      padding: 28px;
+      padding: 26px;
       border-radius: 24px;
       width: 100%;
-      max-width: 390px;
+      max-width: 440px;
+      max-height: 90vh;
+      overflow-y: auto;
       box-shadow: 0 15px 35px rgba(0,0,0,0.3);
       border: 2px solid var(--borde-suave);
       color: var(--texto-principal);
       animation: modalFadeIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .modal-card.wide-modal {
+      max-width: 780px;
     }
 
     .modal-card h2 {
@@ -143,7 +161,7 @@
       background: var(--navbar-bg);
       color: var(--navbar-text);
       text-align: center;
-      padding: 22px 15px;
+      padding: 18px 15px;
       position: sticky;
       top: 0;
       z-index: 100;
@@ -155,7 +173,7 @@
     }
 
     .navbar-title { flex: 1; }
-    .navbar h1 { color: var(--navbar-text); }
+    .navbar h1 { color: var(--navbar-text); font-size: 1.6rem; }
     .navbar h1 span {
       color: #FF7A00;
       text-shadow: 0 1px 3px rgba(0,0,0,0.3);
@@ -175,12 +193,12 @@
     }
     .theme-toggle-btn:hover {
       background: rgba(255, 255, 255, 0.35);
-      transform: scale(1.08);
+      transform: scale(1.05);
     }
 
     .sync-status {
       font-size: 0.8rem;
-      margin-top: 6px;
+      margin-top: 4px;
       opacity: 0.95;
       background: rgba(255, 255, 255, 0.2);
       color: var(--navbar-text);
@@ -191,7 +209,7 @@
     }
 
     .container {
-      max-width: 900px;
+      max-width: 950px;
       margin: 20px auto;
       padding: 0 15px;
     }
@@ -199,14 +217,14 @@
     /* Panel de Métricas Privado */
     .dashboard-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 15px;
       margin-bottom: 25px;
     }
 
     .dash-card {
       background: var(--bg-tarjeta);
-      padding: 18px;
+      padding: 16px;
       border-radius: 18px;
       box-shadow: var(--shadow-tarjeta);
       border-left: 6px solid var(--pastel-azul);
@@ -221,9 +239,10 @@
     .dash-card.green { border-left-color: var(--pastel-verde); }
     .dash-card.orange { border-left-color: var(--pastel-durazno); }
     .dash-card.purple { border-left-color: var(--pastel-lila); }
+    .dash-card.red { border-left-color: var(--pastel-rosa); }
 
     .dash-card h4 {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--texto-secundario);
       margin-bottom: 5px;
       text-transform: uppercase;
@@ -231,7 +250,7 @@
     }
 
     .dash-card .number {
-      font-size: 1.6rem;
+      font-size: 1.45rem;
       font-weight: bold;
       color: var(--texto-principal);
     }
@@ -239,20 +258,20 @@
     /* Barra de Control */
     .admin-bar {
       background: var(--bg-tarjeta);
-      padding: 18px;
+      padding: 16px;
       border-radius: 18px;
       box-shadow: var(--shadow-tarjeta);
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
-      gap: 15px;
+      gap: 12px;
       flex-wrap: wrap;
     }
 
     .admin-actions {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
@@ -260,20 +279,23 @@
       background: var(--pastel-azul);
       color: #161524;
       border: none;
-      padding: 10px 18px;
+      padding: 10px 16px;
       border-radius: 12px;
       font-weight: bold;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       box-shadow: 0 3px 10px rgba(0,0,0,0.08);
       transition: all 0.2s ease;
     }
-    .btn-action:hover { opacity: 0.9; transform: translateY(-2px); }
+    .btn-action:hover { opacity: 0.92; transform: translateY(-2px); }
 
     .btn-create { background: var(--pastel-verde); color: #0F3822; }
     .btn-users { background: var(--pastel-cyan); color: #053B34; }
     .btn-excel { background: var(--pastel-lima); color: #1E4627; }
-    .btn-logout { background: var(--pastel-rosa); color: #5C0E18; }
+    .btn-expense { background: var(--pastel-rosa); color: #5C0E18; }
+    .btn-credit { background: var(--pastel-amarillo); color: #4A3B00; }
+    .btn-stats { background: linear-gradient(135deg, var(--pastel-lila) 0%, var(--pastel-cyan) 100%); color: #1F1535; }
+    .btn-logout { background: var(--pastel-durazno); color: #5C0E18; }
 
     /* Buscador */
     .search-box {
@@ -301,7 +323,7 @@
     /* Categorías */
     .category-menu {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       overflow-x: auto;
       padding-bottom: 10px;
       margin-bottom: 20px;
@@ -311,7 +333,7 @@
       background: var(--bg-tarjeta);
       border: 2px solid var(--borde-suave);
       color: var(--texto-principal);
-      padding: 10px 20px;
+      padding: 9px 18px;
       border-radius: 25px;
       font-weight: bold;
       cursor: pointer;
@@ -331,24 +353,31 @@
     /* Grilla de Productos Animados */
     .products-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-      gap: 18px;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
       margin-bottom: 30px;
     }
 
     .product-card {
       background: var(--bg-tarjeta);
       border-radius: 20px;
-      padding: 18px;
+      padding: 16px;
       text-align: center;
       box-shadow: var(--shadow-tarjeta);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       border: 2px solid transparent;
+      position: relative;
       transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
       animation: popIn 0.35s ease-out;
     }
+
+    .product-card.low-stock {
+      border-color: var(--pastel-amarillo);
+      background: linear-gradient(180deg, var(--bg-tarjeta) 85%, rgba(250, 240, 202, 0.3) 100%);
+    }
+
     .product-card:hover {
       border-color: var(--pastel-lila);
       transform: translateY(-5px);
@@ -356,37 +385,44 @@
     }
 
     .product-icon {
-      font-size: 2.8rem;
-      margin-bottom: 8px;
+      font-size: 2.6rem;
+      margin-bottom: 6px;
       transition: transform 0.25s ease;
     }
     .product-card:hover .product-icon {
-      transform: scale(1.12) rotate(4deg);
+      transform: scale(1.1) rotate(4deg);
     }
 
     .product-title {
-      font-size: 1.05rem;
+      font-size: 1rem;
       font-weight: bold;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       color: var(--texto-principal);
     }
 
     .product-price {
       color: var(--pastel-verde);
       font-weight: bold;
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       margin-bottom: 6px;
     }
 
     .product-stock {
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       color: var(--texto-secundario);
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       background: var(--bg-secundario);
-      padding: 5px 12px;
+      padding: 4px 10px;
       border-radius: 12px;
       display: inline-block;
       font-weight: 500;
+    }
+
+    .product-stock.warning {
+      background: var(--badge-warning-bg);
+      color: var(--badge-warning-text);
+      font-weight: bold;
+      animation: alertPulse 2s infinite;
     }
 
     .product-stock.out {
@@ -398,18 +434,18 @@
     .card-actions {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
 
     .add-btn {
       background: linear-gradient(135deg, var(--pastel-azul) 0%, var(--pastel-lila) 100%);
       color: #161524;
       border: none;
-      padding: 12px;
+      padding: 10px;
       border-radius: 12px;
       font-weight: bold;
       cursor: pointer;
-      font-size: 1rem;
+      font-size: 0.95rem;
       box-shadow: 0 4px 12px rgba(147,197,253,0.3);
       transition: all 0.2s ease;
     }
@@ -427,11 +463,11 @@
       background: linear-gradient(135deg, var(--pastel-verde) 0%, #A8E6CF 100%);
       color: #0F3822;
       border: none;
-      padding: 14px;
+      padding: 13px;
       border-radius: 14px;
       font-weight: bold;
       cursor: pointer;
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       width: 100%;
       box-shadow: 0 4px 15px rgba(134,239,172,0.35);
       animation: pulseGlow 3s infinite;
@@ -443,9 +479,9 @@
       background: var(--pastel-amarillo);
       color: #4A3B00;
       border: none;
-      padding: 8px;
+      padding: 7px;
       border-radius: 10px;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: bold;
       cursor: pointer;
       box-shadow: 0 2px 6px rgba(0,0,0,0.06);
@@ -457,9 +493,9 @@
       background: var(--pastel-rosa);
       color: #5C0E18;
       border: none;
-      padding: 8px;
+      padding: 7px;
       border-radius: 10px;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: bold;
       cursor: pointer;
       box-shadow: 0 2px 6px rgba(0,0,0,0.06);
@@ -470,7 +506,7 @@
     /* Cajones Plegables */
     .modal-form {
       background: var(--bg-tarjeta);
-      padding: 24px;
+      padding: 22px;
       border-radius: 20px;
       box-shadow: var(--shadow-tarjeta);
       margin-bottom: 25px;
@@ -479,21 +515,21 @@
       animation: popIn 0.3s ease-out;
     }
 
-    .modal-form h3 { color: var(--pastel-lila); margin-bottom: 15px; }
+    .modal-form h3 { color: var(--pastel-lila); margin-bottom: 12px; }
 
     .form-group {
-      margin-bottom: 15px;
+      margin-bottom: 12px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
     }
 
-    .form-group label { font-weight: bold; font-size: 0.9rem; color: var(--texto-secundario); }
+    .form-group label { font-weight: bold; font-size: 0.85rem; color: var(--texto-secundario); }
     .form-group input, .form-group select {
-      padding: 12px;
+      padding: 10px 14px;
       border: 2px solid var(--borde-suave);
       border-radius: 12px;
-      font-size: 1rem;
+      font-size: 0.95rem;
       background: var(--bg-secundario);
       color: var(--texto-principal);
     }
@@ -518,7 +554,7 @@
     /* Cotizador y Carrito Colorido */
     .calculator-section {
       background: var(--bg-tarjeta);
-      padding: 24px;
+      padding: 22px;
       border-radius: 20px;
       box-shadow: var(--shadow-tarjeta);
       margin-bottom: 25px;
@@ -526,12 +562,12 @@
       animation: popIn 0.35s ease-out;
     }
 
-    .calculator-section h2 { color: var(--pastel-amarillo); margin-bottom: 15px; }
-    .calc-box { display: flex; flex-direction: column; gap: 12px; }
+    .calculator-section h2 { color: var(--pastel-amarillo); margin-bottom: 12px; font-size: 1.25rem; }
+    .calc-box { display: flex; flex-direction: column; gap: 10px; }
 
     .cart-section {
       background: var(--bg-tarjeta);
-      padding: 24px;
+      padding: 22px;
       border-radius: 20px;
       box-shadow: var(--shadow-tarjeta);
       margin-bottom: 30px;
@@ -539,41 +575,68 @@
       animation: popIn 0.35s ease-out;
     }
 
-    .cart-section h2 { color: var(--pastel-lila); margin-bottom: 15px; }
+    .cart-section h2 { color: var(--pastel-lila); margin-bottom: 12px; font-size: 1.25rem; }
     .cart-items { list-style: none; margin-bottom: 15px; }
 
     .cart-item {
       display: flex;
       justify-content: space-between;
-      padding: 10px 0;
+      padding: 8px 0;
       border-bottom: 1px dashed var(--borde-suave);
       font-weight: 500;
       animation: slideInRight 0.25s ease-out;
     }
 
-    .cart-total {
-      font-size: 1.35rem;
+    .cart-total-box {
+      background: var(--bg-secundario);
+      padding: 14px;
+      border-radius: 14px;
+      margin-bottom: 15px;
+      border: 1px solid var(--borde-suave);
+    }
+
+    .cart-total-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+      color: var(--texto-secundario);
+    }
+
+    .cart-total-row.final {
+      font-size: 1.3rem;
       font-weight: bold;
-      text-align: right;
       color: var(--pastel-verde);
-      margin-bottom: 18px;
+      border-top: 1px solid var(--borde-suave);
+      padding-top: 6px;
+      margin-top: 6px;
+    }
+
+    .discount-box {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+      background: var(--bg-secundario);
+      padding: 10px;
+      border-radius: 12px;
     }
 
     .change-box {
       background: var(--bg-secundario);
-      padding: 18px;
+      padding: 16px;
       border-radius: 14px;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
       display: flex;
       flex-direction: column;
       gap: 8px;
       border: 2px solid var(--borde-suave);
     }
 
-    .change-box label { font-weight: bold; font-size: 0.9rem; color: var(--texto-secundario); }
+    .change-box label { font-weight: bold; font-size: 0.85rem; color: var(--texto-secundario); }
 
     .change-display {
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       font-weight: bold;
       color: var(--pastel-lila);
     }
@@ -581,36 +644,121 @@
     .action-buttons-group {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
     .btn-ticket {
       background: linear-gradient(135deg, var(--pastel-cyan) 0%, var(--pastel-azul) 100%);
       color: #053B34;
-      padding: 14px;
+      padding: 12px;
       border-radius: 14px;
       border: none;
       font-weight: bold;
       cursor: pointer;
-      font-size: 1.05rem;
+      font-size: 1rem;
       width: 100%;
       box-shadow: 0 4px 12px rgba(103,232,249,0.3);
       transition: transform 0.2s;
     }
     .btn-ticket:hover { transform: translateY(-2px); }
 
+    .btn-job {
+      background: linear-gradient(135deg, var(--pastel-amarillo) 0%, var(--pastel-durazno) 100%);
+      color: #4A3B00;
+      padding: 12px;
+      border-radius: 14px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1rem;
+      width: 100%;
+      box-shadow: 0 4px 12px rgba(250,240,202,0.4);
+      transition: transform 0.2s;
+    }
+
+    /* Tablas Generales */
+    .credit-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 0.88rem;
+    }
+    .credit-table th, .credit-table td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid var(--borde-suave);
+    }
+    .credit-table th {
+      background: var(--bg-secundario);
+      color: var(--pastel-lila);
+    }
+
+    /* Estilos del Módulo de Estadísticas */
+    .top-products-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .top-prod-item {
+      background: var(--bg-secundario);
+      padding: 10px 14px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid var(--borde-suave);
+    }
+    .top-rank-badge {
+      background: linear-gradient(135deg, var(--pastel-rosa) 0%, var(--pastel-lila) 100%);
+      color: #161524;
+      font-weight: bold;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      margin-right: 10px;
+    }
+    .closure-accordion {
+      border: 1px solid var(--borde-suave);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .closure-header {
+      background: var(--bg-secundario);
+      padding: 12px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+    .closure-details {
+      padding: 12px;
+      display: none;
+      font-size: 0.85rem;
+      background: var(--bg-tarjeta);
+      border-top: 1px dashed var(--borde-suave);
+    }
+
     footer {
       text-align: center;
       padding: 20px;
       background: #0F0E17;
       color: #A0AEC0;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
   </style>
 </head>
 <body>
 
-  <!-- Inicio de Sesión Privado -->
+  <!-- Modal Inicio de Sesión -->
   <div id="login-overlay" class="modal-overlay" style="display: none;">
     <div class="modal-card">
       <h2>Iniciar Sesión</h2>
@@ -626,11 +774,11 @@
     </div>
   </div>
 
-  <!-- Fondo de Caja Inicial -->
+  <!-- Modal Fondo de Caja Inicial -->
   <div id="cash-overlay" class="modal-overlay" style="display: none;">
     <div class="modal-card">
       <h2 id="cash-modal-title">Fondo de Caja Inicial (Folio #1)</h2>
-      <p style="font-size: 0.9rem; color: var(--texto-secundario); margin-bottom: 15px; text-align: center;">¿Con cuánto dinero efectivo inicia la caja hoy?</p>
+      <p style="font-size: 0.85rem; color: var(--texto-secundario); margin-bottom: 15px; text-align: center;">¿Con cuánto dinero efectivo inicia la caja hoy?</p>
       <div class="form-group">
         <label>Efectivo en Caja ($):</label>
         <input type="number" id="initial-cash-input" placeholder="0.00" step="0.50">
@@ -639,11 +787,144 @@
     </div>
   </div>
 
+  <!-- Modal Salida / Gasto de Caja -->
+  <div id="expense-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <h2>💸 Registrar Gasto de Caja</h2>
+      <div class="form-group">
+        <label>Concepto / Motivo:</label>
+        <input type="text" id="expense-reason" placeholder="Ej: Pago de botellón de agua, cambio, papelería rápida">
+      </div>
+      <div class="form-group">
+        <label>Monto Retirado ($):</label>
+        <input type="number" id="expense-amount" placeholder="0.00" step="0.50" min="0">
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button class="btn-action btn-expense" style="flex:1;" onclick="saveExpense()">Registrar Salida</button>
+        <button class="btn-action" style="background:#888; color:#fff;" onclick="closeModal('expense-modal')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Libreta Digital (Fiados / Créditos) -->
+  <div id="credit-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card" style="max-width: 650px;">
+      <div class="inventory-header">
+        <h2>📖 Libreta Digital - Cuentas por Cobrar</h2>
+        <button class="delete-btn" style="padding: 4px 10px;" onclick="closeModal('credit-modal')">✕ Cerrar</button>
+      </div>
+      
+      <!-- Registrar nuevo deudor manualmente -->
+      <div style="background: var(--bg-secundario); padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--borde-suave);">
+        <h4 style="font-size:0.9rem; margin-bottom:8px; color:var(--pastel-lila);">➕ Registrar Nueva Cuenta de Crédito</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <input type="text" id="cred-name" placeholder="Nombre del Cliente" style="padding:8px; border-radius:8px; border:1px solid var(--borde-suave);">
+          <input type="text" id="cred-phone" placeholder="Teléfono" style="padding:8px; border-radius:8px; border:1px solid var(--borde-suave);">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top:8px;">
+          <input type="text" id="cred-desc" placeholder="Detalle (Ej: 2 cuadernos, impresiones)" style="padding:8px; border-radius:8px; border:1px solid var(--borde-suave);">
+          <input type="number" id="cred-amount" placeholder="Monto Total ($)" step="0.50" style="padding:8px; border-radius:8px; border:1px solid var(--borde-suave);">
+        </div>
+        <button class="btn-action btn-create" style="width:100%; margin-top:8px; padding:8px;" onclick="addManualCredit()">Guardar en Libreta</button>
+      </div>
+
+      <div style="max-height: 300px; overflow-y: auto;">
+        <table class="credit-table">
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Detalle</th>
+              <th>Deuda Pendiente</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="credits-list-body">
+            <tr><td colspan="4" style="text-align:center;">No hay cuentas activas.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Ticket de Encargo / Trabajo Pendiente -->
+  <div id="pending-job-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <h2>📌 Registrar Encargo / Trabajo Pendiente</h2>
+      <div class="form-group">
+        <label>Nombre del Cliente:</label>
+        <input type="text" id="job-client-name" placeholder="Ej: María López">
+      </div>
+      <div class="form-group">
+        <label>Teléfono de Contacto:</label>
+        <input type="text" id="job-client-phone" placeholder="Ej: 961 123 4567">
+      </div>
+      <div class="form-group">
+        <label>Anticipo Dejado en Caja ($):</label>
+        <input type="number" id="job-advance" placeholder="0.00" step="0.50" min="0">
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button class="btn-action btn-create" style="flex:1;" onclick="processPendingJob()">Imprimir Ticket de Encargo</button>
+        <button class="btn-action" style="background:#888; color:#fff;" onclick="closeModal('pending-job-modal')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EXCLUSIVO DE ADMINISTRADOR: REPORTES Y ESTADÍSTICAS -->
+  <div id="stats-admin-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card wide-modal">
+      <div class="inventory-header">
+        <h2>📈 Panel de Reportes & Estadísticas (Administrador)</h2>
+        <button class="delete-btn" style="padding: 4px 10px;" onclick="closeModal('stats-admin-modal')">✕ Cerrar</button>
+      </div>
+
+      <!-- Resumen General -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 20px;">
+        <div style="background:var(--bg-secundario); padding:12px; border-radius:12px; border:1px solid var(--borde-suave); text-align:center;">
+          <small style="color:var(--texto-secundario);">Total Ventas Históricas</small>
+          <div id="stat-total-historical" style="font-size:1.3rem; font-weight:bold; color:var(--pastel-verde);">$0.00</div>
+        </div>
+        <div style="background:var(--bg-secundario); padding:12px; border-radius:12px; border:1px solid var(--borde-suave); text-align:center;">
+          <small style="color:var(--texto-secundario);">Gastos Totales Retirados</small>
+          <div id="stat-expenses-historical" style="font-size:1.3rem; font-weight:bold; color:var(--pastel-rosa);">$0.00</div>
+        </div>
+        <div style="background:var(--bg-secundario); padding:12px; border-radius:12px; border:1px solid var(--borde-suave); text-align:center;">
+          <small style="color:var(--texto-secundario);">Cortes de Caja Registrados</small>
+          <div id="stat-closures-count" style="font-size:1.3rem; font-weight:bold; color:var(--pastel-lila);">0 cierres</div>
+        </div>
+      </div>
+
+      <!-- Gráfica de Ventas -->
+      <div style="background:var(--bg-secundario); padding:15px; border-radius:16px; margin-bottom:20px; border:1px solid var(--borde-suave);">
+        <h4 style="color:var(--pastel-lila); margin-bottom:10px;">📊 Histórico de Ingresos Netos por Turno</h4>
+        <div style="height: 220px; position: relative;">
+          <canvas id="salesChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Top 5 Productos Más Vendidos -->
+      <div style="margin-bottom: 20px;">
+        <h4 style="color:var(--pastel-amarillo); margin-bottom:8px;">🔥 Top 5 Productos Más Vendidos</h4>
+        <ul class="top-products-list" id="top-products-container">
+          <li style="color:var(--texto-secundario); font-size:0.85rem;">Cargando estadísticas...</li>
+        </ul>
+      </div>
+
+      <!-- Historial Acordeón de Cierres de Caja -->
+      <div>
+        <h4 style="color:var(--pastel-cyan); margin-bottom:8px;">🗂️ Historial de Cierres de Caja Anteriores</h4>
+        <div id="closures-history-container" style="max-height: 250px; overflow-y: auto;">
+          <div style="color:var(--texto-secundario); font-size:0.85rem;">No hay cortes de caja antiguos registrados.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
   <header class="navbar">
     <div style="width: 100px;"></div>
     <div class="navbar-title">
       <h1>Papelería <span>Maki</span></h1>
-      <p id="system-subtitle" style="font-size:0.9rem; opacity:0.9;">Sistema Empresarial</p>
+      <p id="system-subtitle" style="font-size:0.85rem; opacity:0.9;">Sistema Empresarial y Punto de Venta</p>
       <div class="sync-status" id="sync-status">🟢 Conectado en Tiempo Real</div>
     </div>
     <div style="width: 100px; text-align: right;">
@@ -653,32 +934,39 @@
 
   <main class="container">
 
-    <!-- Panel de Métricas / Ingresos del Día -->
+    <!-- Panel de Métricas Privado / Dashboard -->
     <div class="dashboard-grid" id="dashboard-metrics-container">
       <div class="dash-card orange" id="card-prod-count-box">
         <h4>Tipos de Productos</h4>
         <div class="number" id="dash-prod-count">0</div>
       </div>
+      <div class="dash-card red" id="card-low-stock-box">
+        <h4>⚠️ Reordenar Stock</h4>
+        <div class="number" id="dash-low-stock">0 items</div>
+      </div>
       <div class="dash-card purple" id="card-total-units-box">
-        <h4>Total Unidades en Stock</h4>
+        <h4>Total Unidades Stock</h4>
         <div class="number" id="dash-total-units">0 pzs</div>
       </div>
       <div class="dash-card" id="card-inventory-val-box">
-        <h4>Valor Total Inventario</h4>
+        <h4>Valor Inventario</h4>
         <div class="number" id="dash-inventory-val">$0.00</div>
       </div>
       <div class="dash-card green">
-        <h4>Ingresos Turno Actual</h4>
+        <h4>Efectivo Neto en Caja</h4>
         <div class="number" id="dash-income-total">$0.00</div>
       </div>
     </div>
 
     <!-- Barra de Control Empresarial -->
     <div class="admin-bar" id="admin-bar-container">
-      <h2 style="color: var(--pastel-lila); font-size: 1.1rem; margin: 0;" id="panel-title-text">Panel de Operaciones</h2>
+      <h2 style="color: var(--pastel-lila); font-size: 1.05rem; margin: 0;" id="panel-title-text">Panel de Operaciones</h2>
       <div class="admin-actions">
-        <button class="btn-action btn-excel" id="btn-export-excel" onclick="exportInventoryExcel()" style="display: none;">📊 Descargar Excel (Stock)</button>
-        <button class="btn-action btn-create" id="btn-admin-create" onclick="toggleSection('new-product-form')" style="display: none;">➕ Surtir / Nuevo Item</button>
+        <button class="btn-action btn-stats" id="btn-admin-stats" onclick="openAdminStatsModal()" style="display: none;">📈 Reportes & Gráficas</button>
+        <button class="btn-action btn-expense" onclick="openModal('expense-modal')">💸 Registrar Gasto</button>
+        <button class="btn-action btn-credit" onclick="openModal('credit-modal')">📖 Libreta Fiados</button>
+        <button class="btn-action btn-excel" id="btn-export-excel" onclick="exportInventoryExcel()" style="display: none;">📊 Exportar Stock</button>
+        <button class="btn-action btn-create" id="btn-admin-create" onclick="toggleSection('new-product-form')" style="display: none;">➕ Surtir Item</button>
         <button class="btn-action btn-users" id="btn-admin-users" onclick="toggleSection('new-user-form')" style="display: none;">👥 Usuarios</button>
         <button class="btn-action btn-logout" onclick="logoutSession()">🚪 Salir</button>
       </div>
@@ -821,7 +1109,26 @@
       <ul class="cart-items" id="cart-items-list">
         <li style="color: var(--texto-secundario);">No has agregado productos aún.</li>
       </ul>
-      <div class="cart-total">Total: $<span id="cart-total-price">0.00</span></div>
+
+      <!-- Descuento -->
+      <div class="discount-box">
+        <span style="font-size:0.85rem; font-weight:bold; color:var(--texto-secundario);">🏷️ Descuento:</span>
+        <select id="discount-type" style="padding:6px; border-radius:8px; border:1px solid var(--borde-suave);" onchange="updateCartUI()">
+          <option value="none">Sin Descuento</option>
+          <option value="5_percent">5% Off</option>
+          <option value="10_percent">10% Off</option>
+          <option value="15_percent">15% Off</option>
+          <option value="fixed">Monto Fijo ($)</option>
+        </select>
+        <input type="number" id="discount-fixed-val" placeholder="$0.00" value="0" min="0" style="width:80px; padding:6px; border-radius:8px; border:1px solid var(--borde-suave); display:none;" oninput="updateCartUI()">
+      </div>
+
+      <!-- Totales -->
+      <div class="cart-total-box">
+        <div class="cart-total-row"><span>Subtotal:</span><span>$<span id="cart-subtotal">0.00</span></span></div>
+        <div class="cart-total-row" id="row-discount" style="display:none; color:var(--pastel-rosa);"><span>Descuento:</span><span>-$<span id="cart-discount">0.00</span></span></div>
+        <div class="cart-total-row final"><span>Total:</span><span>$<span id="cart-total-price">0.00</span></span></div>
+      </div>
 
       <!-- Calculadora de Cambio -->
       <div class="change-box">
@@ -833,6 +1140,8 @@
       <div class="action-buttons-group">
         <button class="sell-btn" onclick="checkoutDirectSale()">🛍️ Registrar Venta Directa en Mostrador</button>
         <button class="btn-ticket" onclick="printTicket()">🧾 Imprimir / Generar Ticket de Venta</button>
+        <button class="btn-job" onclick="openModal('pending-job-modal')">📌 Registrar Encargo / Trabajo Pendiente</button>
+        <button class="btn-action btn-credit" style="padding:12px; font-size:1rem;" onclick="checkoutCreditSale()">📖 Cargar a Libreta (Vender a Crédito)</button>
         <button class="sell-btn" style="background: linear-gradient(135deg, var(--pastel-durazno) 0%, var(--pastel-rosa) 100%); color: #5C0E18; margin-top: 10px; box-shadow: 0 4px 12px rgba(255,139,167,0.4);" onclick="openClosureModal()">🔒 Cerrar Caja del Día</button>
       </div>
     </section>
@@ -866,9 +1175,9 @@
     let defaultProducts = [
       { id: 101, name: "Carpeta de Argollas", price: 50.00, stock: 16, category: "papeleria", icon: "📁" },
       { id: 102, name: "Cuaderno Profesional", price: 35.00, stock: 25, category: "papeleria", icon: "📓" },
-      { id: 103, name: "Lápiz HB #2", price: 5.00, stock: 50, category: "papeleria", icon: "✏️" },
+      { id: 103, name: "Lápiz HB #2", price: 5.00, stock: 4, category: "papeleria", icon: "✏️" },
       { id: 104, name: "Lapicero Tinta Azul", price: 8.00, stock: 40, category: "papeleria", icon: "🖊️" },
-      { id: 105, name: "Tijeras Escolares", price: 20.00, stock: 12, category: "papeleria", icon: "✂️" },
+      { id: 105, name: "Tijeras Escolares", price: 20.00, stock: 3, category: "papeleria", icon: "✂️" },
       { id: 106, name: "Sacapuntas", price: 6.00, stock: 30, category: "papeleria", icon: "✏️" },
       { id: 107, name: "Borrador / Goma", price: 5.00, stock: 35, category: "papeleria", icon: "🧹" },
       { id: 201, name: "Recibo de Agua / Luz", price: 25.00, stock: 999, category: "servicios", icon: "💡" },
@@ -878,7 +1187,7 @@
       { id: 205, name: "Imprimir / Descargar CURP", price: 10.00, stock: 999, category: "servicios", icon: "🆔" },
       { id: 206, name: "Descargar Música (mp3)", price: 3.00, stock: 999, category: "servicios", icon: "🎵" },
       { id: 207, name: "Escaneo Documento PDF", price: 5.00, stock: 999, category: "servicios", icon: "📄" },
-      { id: 301, name: "Memoria USB 32GB", price: 120.00, stock: 5, category: "computo", icon: "💾" }
+      { id: 301, name: "Memoria USB 32GB", price: 120.00, stock: 2, category: "computo", icon: "💾" }
     ];
 
     let products = [];
@@ -887,13 +1196,16 @@
       "hiromi": { pass: "123", role: "vendedor" } 
     };
     let cashSessions = {};
+    let credits = [];
+    let historicalClosures = [];
 
     let cart = [];
     let currentCategory = 'todos';
     let tempActiveUser = '';
     let isAdmin = false;
+    let salesChartInstance = null;
 
-    // LÓGICA DE TEMA CLARO / OSCURO
+    // Tema Claro / Oscuro
     function initTheme() {
       const savedTheme = localStorage.getItem('maki_theme') || 'light';
       if (savedTheme === 'dark') {
@@ -924,6 +1236,9 @@
       return tempActiveUser.toLowerCase();
     }
 
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
     window.onload = function() {
       initTheme();
 
@@ -944,13 +1259,18 @@
       db.ref('maki_app/users').set(users);
     }
 
+    function syncCredits() {
+      db.ref('maki_app/credits').set(credits);
+    }
+
     function syncUserSession(username) {
       if (!username) return;
       const uKey = username.toLowerCase();
-      const userCash = cashSessions[uKey] || { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: 1 };
+      const userCash = cashSessions[uKey] || { initialCash: 0, totalIncome: 0, salesHistory: [], expenses: [], attendance: [], folio: 1 };
       db.ref(`maki_app/cash_sessions/${uKey}`).set(userCash);
     }
 
+    // Escuchador Firebase en tiempo real
     db.ref('maki_app').on('value', (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -971,6 +1291,9 @@
             cashSessions[u] = remoteSessions[u];
           }
         }
+
+        credits = data.credits || [];
+        historicalClosures = data.historical_closures || [];
       } else {
         products = defaultProducts;
         users = { 
@@ -978,10 +1301,14 @@
           "hiromi": { pass: "123", role: "vendedor" } 
         };
         cashSessions = {};
+        credits = [];
+        historicalClosures = [];
         syncProductsAndUsers();
+        syncCredits();
       }
       renderProducts();
       renderUsersList();
+      renderCreditsList();
       updateDashboard();
       document.getElementById('sync-status').textContent = "🟢 Conectado en Tiempo Real";
     }, (error) => {
@@ -1029,6 +1356,7 @@
 
     function applyUserPermissions() {
       const currentUser = getActiveUser();
+      const btnAdminStats = document.getElementById('btn-admin-stats');
       const btnExportExcel = document.getElementById('btn-export-excel');
       const btnAdminCreate = document.getElementById('btn-admin-create');
       const btnAdminUsers = document.getElementById('btn-admin-users');
@@ -1038,28 +1366,33 @@
       const sellerCart = document.getElementById('seller-cart-section');
 
       const box1 = document.getElementById('card-prod-count-box');
+      const boxLow = document.getElementById('card-low-stock-box');
       const box2 = document.getElementById('card-total-units-box');
       const box3 = document.getElementById('card-inventory-val-box');
 
       if (isAdmin) {
         box1.style.display = 'block';
+        boxLow.style.display = 'block';
         box2.style.display = 'block';
         box3.style.display = 'block';
+        btnAdminStats.style.display = 'inline-block';
         btnExportExcel.style.display = 'inline-block';
         btnAdminCreate.style.display = 'inline-block';
         btnAdminUsers.style.display = 'inline-block';
-        panelTitle.textContent = `Panel de Administración y Surtido - Usuario: ${currentUser.toUpperCase()}`;
+        panelTitle.textContent = `Panel de Administración - Usuario: ${currentUser.toUpperCase()}`;
 
         sellerCalc.style.display = 'none';
         sellerCart.style.display = 'none';
       } else {
         box1.style.display = 'none';
+        boxLow.style.display = 'none';
         box2.style.display = 'none';
         box3.style.display = 'none';
+        btnAdminStats.style.display = 'none';
         btnExportExcel.style.display = 'none';
         btnAdminCreate.style.display = 'none';
         btnAdminUsers.style.display = 'none';
-        panelTitle.textContent = `Panel de Ventas y Caja - Vendedor: ${currentUser.toUpperCase()}`;
+        panelTitle.textContent = `Panel de Ventas - Vendedor: ${currentUser.toUpperCase()}`;
 
         sellerCalc.style.display = 'block';
         sellerCart.style.display = 'block';
@@ -1078,7 +1411,7 @@
 
       const now = new Date();
       if (!cashSessions[currentUser]) {
-        cashSessions[currentUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: 1 };
+        cashSessions[currentUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], expenses: [], attendance: [], folio: 1 };
       }
 
       cashSessions[currentUser].initialCash = initialCash;
@@ -1106,7 +1439,7 @@
 
     function toggleSection(sectionId) {
       if (!isAdmin && (sectionId === 'new-product-form' || sectionId === 'new-user-form')) {
-        alert('⛔ Acceso restringido.');
+        alert('⛔ Acceso restringido a administradores.');
         return;
       }
 
@@ -1168,6 +1501,9 @@
 
       document.getElementById('dash-prod-count').textContent = products.length;
       
+      const lowStockItems = products.filter(p => p.category !== 'servicios' && p.stock <= 5);
+      document.getElementById('dash-low-stock').textContent = `${lowStockItems.length} items`;
+
       const totalUnits = products
         .filter(item => item.category !== 'servicios')
         .reduce((sum, item) => sum + Number(item.stock), 0);
@@ -1181,11 +1517,15 @@
       let currentIncome = 0;
       if (isAdmin) {
         for (let u in cashSessions) {
-          currentIncome += (cashSessions[u].totalIncome || 0);
+          const inc = cashSessions[u].totalIncome || 0;
+          const exp = (cashSessions[u].expenses || []).reduce((s, e) => s + Number(e.amount), 0);
+          currentIncome += (inc - exp);
         }
       } else {
         if (cashSessions[currentUser]) {
-          currentIncome = cashSessions[currentUser].totalIncome || 0;
+          const inc = cashSessions[currentUser].totalIncome || 0;
+          const exp = (cashSessions[currentUser].expenses || []).reduce((s, e) => s + Number(e.amount), 0);
+          currentIncome = inc - exp;
         }
       }
       document.getElementById('dash-income-total').textContent = `$${currentIncome.toFixed(2)}`;
@@ -1287,6 +1627,7 @@
       a.click();
     }
 
+    // Renderizado de Catálogo de Productos con Detección de Stock Bajo
     function renderProducts() {
       const container = document.getElementById('products-container');
       const searchTerm = document.getElementById('search-input').value.toLowerCase();
@@ -1303,16 +1644,25 @@
         const card = document.createElement('div');
         card.className = 'product-card';
         card.style.animationDelay = `${idx * 0.04}s`;
+        
         const isService = product.category === 'servicios';
         const isOut = !isService && product.stock <= 0;
+        const isLowStock = !isService && product.stock > 0 && product.stock <= 5;
+
+        if (isLowStock) {
+          card.classList.add('low-stock');
+        }
         
         let stockDisplay = isService ? 'Servicio Ilimitado' : (isOut ? 'Agotado' : 'Stock: ' + product.stock + ' pzs');
+        let stockClass = isOut ? 'out' : (isLowStock ? 'warning' : '');
 
         card.innerHTML = `
           <div class="product-icon">${product.icon}</div>
           <div class="product-title">${product.name}</div>
           <div class="product-price">$${Number(product.price).toFixed(2)}</div>
-          <div class="product-stock ${isOut ? 'out' : ''}">${stockDisplay}</div>
+          <div class="product-stock ${stockClass}">
+            ${isLowStock ? '⚠️ ' : ''}${stockDisplay}
+          </div>
           <div class="card-actions">
             ${isAdmin ? `
               ${!isService ? `<button class="edit-btn" onclick="editStock(${product.id})">📦 Stock: ${product.stock}</button>` : ''}
@@ -1349,8 +1699,6 @@
       }
 
       cart.push({ prodId: prod.id, name: prod.name, price: Number(prod.price) });
-      
-      // Actualiza la interfaz de inmediato evitando clics dobles
       updateCartUI();
     }
 
@@ -1365,22 +1713,50 @@
       updateCartUI();
     }
 
+    function calculateCartTotals() {
+      const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
+      const discountType = document.getElementById('discount-type')?.value || 'none';
+      const fixedInput = document.getElementById('discount-fixed-val');
+      
+      let discount = 0;
+      if (fixedInput) {
+        if (discountType === 'fixed') {
+          fixedInput.style.display = 'inline-block';
+          discount = parseFloat(fixedInput.value) || 0;
+        } else {
+          fixedInput.style.display = 'none';
+        }
+      }
+
+      if (discountType === '5_percent') discount = subtotal * 0.05;
+      else if (discountType === '10_percent') discount = subtotal * 0.10;
+      else if (discountType === '15_percent') discount = subtotal * 0.15;
+
+      if (discount > subtotal) discount = subtotal;
+      const total = subtotal - discount;
+
+      return { subtotal, discount, total };
+    }
+
     function updateCartUI() {
       const list = document.getElementById('cart-items-list');
+      const subtotalDisplay = document.getElementById('cart-subtotal');
+      const discountDisplay = document.getElementById('cart-discount');
       const totalDisplay = document.getElementById('cart-total-price');
+      const rowDiscount = document.getElementById('row-discount');
 
       if (cart.length === 0) {
         list.innerHTML = '<li style="color: var(--texto-secundario);">No has agregado productos aún.</li>';
+        subtotalDisplay.textContent = '0.00';
+        discountDisplay.textContent = '0.00';
         totalDisplay.textContent = '0.00';
+        rowDiscount.style.display = 'none';
         calculateChange();
         return;
       }
 
       list.innerHTML = '';
-      let total = 0;
-
       cart.forEach((item, index) => {
-        total += item.price;
         const li = document.createElement('li');
         li.className = 'cart-item';
         li.innerHTML = `
@@ -1390,12 +1766,22 @@
         list.appendChild(li);
       });
 
+      const { subtotal, discount, total } = calculateCartTotals();
+      subtotalDisplay.textContent = subtotal.toFixed(2);
+      
+      if (discount > 0) {
+        rowDiscount.style.display = 'flex';
+        discountDisplay.textContent = discount.toFixed(2);
+      } else {
+        rowDiscount.style.display = 'none';
+      }
+
       totalDisplay.textContent = total.toFixed(2);
       calculateChange();
     }
 
     function calculateChange() {
-      const total = cart.reduce((sum, item) => sum + item.price, 0);
+      const { total } = calculateCartTotals();
       const cash = parseFloat(document.getElementById('cash-received').value) || 0;
       const change = cash - total;
       
@@ -1417,13 +1803,14 @@
       updateCartUI();
     }
 
-    function processDeductions() {
+    // Procesa descontar stock y registra la transacción
+    function processDeductions(overrideAmount = null) {
       const currentUser = getActiveUser();
-      let totalSale = 0;
+      const { total } = calculateCartTotals();
+      const totalSale = (overrideAmount !== null) ? overrideAmount : total;
       let itemsList = [];
       
       cart.forEach(item => {
-        totalSale += item.price;
         itemsList.push({ name: item.name, price: item.price });
         if (item.prodId !== null) {
           const prod = products.find(p => Number(p.id) === Number(item.prodId));
@@ -1434,7 +1821,7 @@
       });
 
       if (!cashSessions[currentUser]) {
-        cashSessions[currentUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: 1 };
+        cashSessions[currentUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], expenses: [], attendance: [], folio: 1 };
       }
 
       cashSessions[currentUser].totalIncome = Number((cashSessions[currentUser].totalIncome || 0) + totalSale);
@@ -1452,6 +1839,8 @@
 
       cart = [];
       document.getElementById('cash-received').value = '';
+      if(document.getElementById('discount-type')) document.getElementById('discount-type').value = 'none';
+      if(document.getElementById('discount-fixed-val')) document.getElementById('discount-fixed-val').value = '0';
       
       syncProductsAndUsers();
       syncUserSession(currentUser);
@@ -1471,6 +1860,7 @@
       alert(`✅ ¡Venta registrada con éxito!\nSe cobraron $${amount.toFixed(2)} y se acumuló en caja.`);
     }
 
+    // Impresión de Ticket de Venta
     function printTicket() {
       if (cart.length === 0) {
         alert('No hay productos en el carrito para imprimir un ticket.');
@@ -1478,8 +1868,8 @@
       }
 
       const now = new Date();
+      const { subtotal, discount, total } = calculateCartTotals();
       const cash = parseFloat(document.getElementById('cash-received').value) || 0;
-      let total = 0;
 
       let ticketContent = `
         <div style="font-family: monospace; width: 280px; padding: 10px; color: #000; animation: ticketPrint 0.6s ease-out; transform-origin: top center;">
@@ -1489,7 +1879,6 @@
       `;
 
       cart.forEach(item => {
-        total += item.price;
         ticketContent += `
           <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin: 4px 0;">
             <span>${item.name}</span>
@@ -1502,18 +1891,22 @@
 
       ticketContent += `
           <hr style="border-top: 1px dashed #000;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+            <span>Subtotal:</span><span>$${subtotal.toFixed(2)}</span>
+          </div>
+          ${discount > 0 ? `<div style="display: flex; justify-content: space-between; font-size: 0.85rem; color:red;">
+            <span>Descuento:</span><span>-$${discount.toFixed(2)}</span>
+          </div>` : ''}
           <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1rem; margin-top: 5px;">
             <span>TOTAL:</span>
             <span>$${total.toFixed(2)}</span>
           </div>
           ${cash > 0 ? `
           <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-top: 3px;">
-            <span>Efectivo:</span>
-            <span>$${cash.toFixed(2)}</span>
+            <span>Efectivo:</span><span>$${cash.toFixed(2)}</span>
           </div>
           <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-            <span>Cambio:</span>
-            <span>$${change.toFixed(2)}</span>
+            <span>Cambio:</span><span>$${change.toFixed(2)}</span>
           </div>` : ''}
           <p style="text-align: center; margin-top: 15px; font-size: 0.8rem;">¡Gracias por su compra!</p>
         </div>
@@ -1529,13 +1922,387 @@
       printWin.close();
     }
 
+    // GASTOS DE CAJA
+    function saveExpense() {
+      const reason = document.getElementById('expense-reason').value.trim();
+      const amount = parseFloat(document.getElementById('expense-amount').value);
+
+      if (!reason || isNaN(amount) || amount <= 0) {
+        alert('Por favor ingresa un concepto válido y un monto mayor a 0.');
+        return;
+      }
+
+      const currentUser = getActiveUser();
+      if (!cashSessions[currentUser]) {
+        cashSessions[currentUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], expenses: [], attendance: [], folio: 1 };
+      }
+      if (!cashSessions[currentUser].expenses) {
+        cashSessions[currentUser].expenses = [];
+      }
+
+      const now = new Date();
+      cashSessions[currentUser].expenses.push({
+        date: now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+        reason: reason,
+        amount: amount
+      });
+
+      syncUserSession(currentUser);
+      updateDashboard();
+      closeModal('expense-modal');
+      document.getElementById('expense-reason').value = '';
+      document.getElementById('expense-amount').value = '';
+      alert(`💸 Gasto registrado: -$${amount.toFixed(2)} (${reason}). Se descontó de la caja.`);
+    }
+
+    // MÓDULO DE FIADOS / LIBRETA DIGITAL
+    function renderCreditsList() {
+      const tbody = document.getElementById('credits-list-body');
+      if (!tbody) return;
+
+      if (credits.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:12px;">No hay cuentas por cobrar activas.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = credits.map((c, idx) => `
+        <tr>
+          <td><strong>${c.client}</strong><br><small>${c.phone || 'Sin tel'}</small></td>
+          <td>${c.description}</td>
+          <td style="color:var(--pastel-rosa); font-weight:bold;">$${Number(c.balance).toFixed(2)}</td>
+          <td>
+            <button onclick="payCredit(${idx})" style="background:var(--pastel-verde); color:#0F3822; border:none; padding:4px 8px; border-radius:6px; font-size:0.75rem; font-weight:bold; cursor:pointer;">Abonar / Liquidar</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function addManualCredit() {
+      const name = document.getElementById('cred-name').value.trim();
+      const phone = document.getElementById('cred-phone').value.trim();
+      const desc = document.getElementById('cred-desc').value.trim();
+      const amount = parseFloat(document.getElementById('cred-amount').value);
+
+      if (!name || isNaN(amount) || amount <= 0) {
+        alert('Ingresa al menos el nombre del cliente y un monto válido.');
+        return;
+      }
+
+      credits.push({ id: Date.now(), client: name, phone: phone, description: desc || 'Varios papelería', balance: amount });
+      syncCredits();
+      renderCreditsList();
+      
+      document.getElementById('cred-name').value = '';
+      document.getElementById('cred-phone').value = '';
+      document.getElementById('cred-desc').value = '';
+      document.getElementById('cred-amount').value = '';
+      alert(`📖 Cuenta agregada a la Libreta Digital a nombre de ${name}.`);
+    }
+
+    function checkoutCreditSale() {
+      if (cart.length === 0) {
+        alert('Agrega al menos un producto o servicio al carrito.');
+        return;
+      }
+
+      const clientName = prompt("Ingresa el Nombre del Cliente que pide fiado:");
+      if (!clientName) return;
+      const clientPhone = prompt("Teléfono de contacto (Opcional):") || "";
+
+      const { total } = calculateCartTotals();
+      const itemsText = cart.map(i => i.name).join(', ');
+
+      credits.push({
+        id: Date.now(),
+        client: clientName,
+        phone: clientPhone,
+        description: itemsText,
+        balance: total
+      });
+
+      // Descuenta inventario pero NO suma al efectivo de hoy (se cobrará luego)
+      cart.forEach(item => {
+        if (item.prodId !== null) {
+          const prod = products.find(p => Number(p.id) === Number(item.prodId));
+          if (prod && prod.category !== 'servicios' && prod.stock > 0) {
+            prod.stock -= 1;
+          }
+        }
+      });
+
+      cart = [];
+      syncProductsAndUsers();
+      syncCredits();
+      updateCartUI();
+      renderCreditsList();
+      alert(`📖 Venta a crédito registrada a nombre de "${clientName}" por $${total.toFixed(2)}.`);
+    }
+
+    function payCredit(index) {
+      const cred = credits[index];
+      if (!cred) return;
+
+      const payAmount = prompt(`Saldo adeudado por ${cred.client}: $${cred.balance.toFixed(2)}\n\n¿Cuánto dinero abonará/ingresará a la caja hoy?`, cred.balance);
+      const payment = parseFloat(payAmount);
+
+      if (payment && !isNaN(payment) && payment > 0) {
+        const currentUser = getActiveUser();
+        if (!cashSessions[currentUser]) {
+          cashSessions[currentUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], expenses: [], attendance: [], folio: 1 };
+        }
+
+        // Ingresa el abono a la caja
+        cashSessions[currentUser].totalIncome = Number((cashSessions[currentUser].totalIncome || 0) + payment);
+        
+        cred.balance -= payment;
+        if (cred.balance <= 0.01) {
+          credits.splice(index, 1);
+          alert(`🎉 ¡Cuenta de ${cred.client} liquidada por completo!`);
+        } else {
+          alert(`✅ Abono registrado: $${payment.toFixed(2)}. Restan: $${cred.balance.toFixed(2)}.`);
+        }
+
+        syncCredits();
+        syncUserSession(currentUser);
+        renderCreditsList();
+        updateDashboard();
+      }
+    }
+
+    // TICKET DE ENCARGO / TRABAJO PENDIENTE
+    function processPendingJob() {
+      if (cart.length === 0) {
+        alert('Agrega los productos o impresiones del trabajo al carrito.');
+        return;
+      }
+
+      const clientName = document.getElementById('job-client-name').value.trim();
+      const clientPhone = document.getElementById('job-client-phone').value.trim();
+      const advance = parseFloat(document.getElementById('job-advance').value) || 0;
+
+      if (!clientName) {
+        alert('Ingresa el nombre del cliente para identificar el encargo.');
+        return;
+      }
+
+      const { total } = calculateCartTotals();
+      if (advance > total) {
+        alert('El anticipo no puede ser mayor al costo total del trabajo.');
+        return;
+      }
+
+      const pendingBalance = total - advance;
+      const now = new Date();
+      const jobFolio = Math.floor(1000 + Math.random() * 9000);
+
+      let ticketContent = `
+        <div style="font-family: monospace; width: 280px; padding: 10px; color: #000; animation: ticketPrint 0.6s ease-out; transform-origin: top center;">
+          <h2 style="text-align: center; margin-bottom: 2px;">PAPELERÍA MAKI</h2>
+          <h3 style="text-align: center; margin-bottom: 6px;">COMPROBANTE DE ENCARGO</h3>
+          <p style="font-size: 0.8rem; margin-bottom: 8px;">
+            <b>Folio:</b> #${jobFolio}<br>
+            <b>Cliente:</b> ${clientName}<br>
+            <b>Tel:</b> ${clientPhone || 'N/A'}<br>
+            <b>Fecha:</b> ${now.toLocaleDateString()} ${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+          </p>
+          <hr style="border-top: 1px dashed #000;">
+          <p style="font-size: 0.8rem; font-weight: bold; margin-top: 4px;">Detalle del Encargo:</p>
+      `;
+
+      cart.forEach(item => {
+        ticketContent += `
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin: 3px 0;">
+            <span>${item.name}</span>
+            <span>$${item.price.toFixed(2)}</span>
+          </div>
+        `;
+      });
+
+      ticketContent += `
+          <hr style="border-top: 1px dashed #000;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+            <span>Costo Total:</span><span>$${total.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color:#28a745; font-weight:bold;">
+            <span>Anticipo Pagado:</span><span>$${advance.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1rem; margin-top: 4px; color:#d9534f;">
+            <span>POR PAGAR AL RECOGER:</span><span>$${pendingBalance.toFixed(2)}</span>
+          </div>
+          <p style="text-align: center; margin-top: 15px; font-size: 0.75rem;">Conserve este ticket para entregar su trabajo.</p>
+        </div>
+      `;
+
+      // Si pagó un anticipo, ingresa a la caja de hoy y descuenta productos
+      if (advance > 0) {
+        processDeductions(advance);
+      } else {
+        processDeductions(0);
+      }
+
+      closeModal('pending-job-modal');
+      document.getElementById('job-client-name').value = '';
+      document.getElementById('job-client-phone').value = '';
+      document.getElementById('job-advance').value = '';
+
+      const printWin = window.open('', '_blank', 'width=350,height=500');
+      printWin.document.write(`<html><head><title>Ticket de Encargo #${jobFolio}</title></head><body>${ticketContent}</body></html>`);
+      printWin.document.close();
+      printWin.focus();
+      printWin.print();
+      printWin.close();
+    }
+
+    // MÓDULO EXCLUSIVO DE ADMINISTRADOR: ESTADÍSTICAS Y GRÁFICAS
+    function openAdminStatsModal() {
+      if (!isAdmin) {
+        alert('⛔ Acceso exclusivo para el administrador / dueño.');
+        return;
+      }
+      openModal('stats-admin-modal');
+      renderAdminStats();
+    }
+
+    function renderAdminStats() {
+      let totalSalesHist = 0;
+      let totalExpensesHist = 0;
+      const productCounts = {};
+
+      // 1. Procesar Cierres Históricos
+      historicalClosures.forEach(closure => {
+        totalSalesHist += Number(closure.rawIncome || closure.netCash || 0);
+        totalExpensesHist += Number(closure.totalExpenses || 0);
+
+        // Contar productos vendidos
+        (closure.salesHistory || []).forEach(sale => {
+          (sale.items || []).forEach(item => {
+            const itemName = item.name.trim();
+            productCounts[itemName] = (productCounts[itemName] || 0) + 1;
+          });
+        });
+      });
+
+      // 2. Incluir también las ventas del turno actual sin cerrar
+      for (let u in cashSessions) {
+        const currentSales = cashSessions[u].salesHistory || [];
+        currentSales.forEach(sale => {
+          (sale.items || []).forEach(item => {
+            const itemName = item.name.trim();
+            productCounts[itemName] = (productCounts[itemName] || 0) + 1;
+          });
+        });
+      }
+
+      document.getElementById('stat-total-historical').textContent = `$${totalSalesHist.toFixed(2)}`;
+      document.getElementById('stat-expenses-historical').textContent = `$${totalExpensesHist.toFixed(2)}`;
+      document.getElementById('stat-closures-count').textContent = `${historicalClosures.length} cierres`;
+
+      // Render Top 5 Productos
+      const sortedProducts = Object.keys(productCounts)
+        .map(name => ({ name, qty: productCounts[name] }))
+        .sort((a, b) => b.qty - a.qty)
+        .slice(0, 5);
+
+      const topContainer = document.getElementById('top-products-container');
+      if (sortedProducts.length === 0) {
+        topContainer.innerHTML = '<li style="color:var(--texto-secundario); font-size:0.85rem;">No hay suficientes ventas registradas para calcular el Top 5.</li>';
+      } else {
+        topContainer.innerHTML = sortedProducts.map((p, idx) => `
+          <li class="top-prod-item">
+            <div style="display:flex; align-items:center;">
+              <span class="top-rank-badge">#${idx + 1}</span>
+              <strong>${p.name}</strong>
+            </div>
+            <span style="background:var(--pastel-verde); color:#0F3822; padding:4px 10px; border-radius:12px; font-weight:bold; font-size:0.85rem;">${p.qty} vendida(s)</span>
+          </li>
+        `).join('');
+      }
+
+      // Render Historial Acordeón
+      const closuresContainer = document.getElementById('closures-history-container');
+      if (historicalClosures.length === 0) {
+        closuresContainer.innerHTML = '<div style="color:var(--texto-secundario); font-size:0.85rem; padding:10px; text-align:center;">No hay cierres de caja guardados aún.</div>';
+      } else {
+        closuresContainer.innerHTML = historicalClosures.slice().reverse().map((c, idx) => `
+          <div class="closure-accordion">
+            <div class="closure-header" onclick="toggleAccordion('closure-item-${idx}')">
+              <span>🗓️ Folio #${c.folio} - ${c.date} (Atendió: ${c.user})</span>
+              <span style="color:var(--pastel-verde); font-weight:bold;">$${Number(c.netCash).toFixed(2)}</span>
+            </div>
+            <div class="closure-details" id="closure-item-${idx}">
+              <p><b>Fondo Inicial:</b> $${Number(c.initialCash).toFixed(2)}</p>
+              <p><b>Ingresos Brutos:</b> $${Number(c.rawIncome).toFixed(2)}</p>
+              <p><b>Gastos Retirados:</b> -$${Number(c.totalExpenses).toFixed(2)}</p>
+              <p><b>Hora Apertura:</b> ${c.openTime} | <b>Cierre:</b> ${c.closeTime}</p>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Render Gráfica Chart.js
+      renderSalesChart();
+    }
+
+    function toggleAccordion(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+      }
+    }
+
+    function renderSalesChart() {
+      const ctx = document.getElementById('salesChart')?.getContext('2d');
+      if (!ctx) return;
+
+      const labels = historicalClosures.map(c => `Folio #${c.folio} (${c.date})`);
+      const dataValues = historicalClosures.map(c => Number(c.netCash));
+
+      if (salesChartInstance) {
+        salesChartInstance.destroy();
+      }
+
+      salesChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels.length > 0 ? labels : ['Sin datos'],
+          datasets: [{
+            label: 'Ventas Netas ($)',
+            data: dataValues.length > 0 ? dataValues : [0],
+            borderColor: '#C084FC',
+            backgroundColor: 'rgba(192, 132, 252, 0.2)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.35,
+            pointRadius: 5,
+            pointHoverRadius: 7
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#CBD5E1' } }
+          },
+          scales: {
+            x: { ticks: { color: '#CBD5E1', font: { size: 11 } } },
+            y: { ticks: { color: '#CBD5E1' }, beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    // CORTE DE CAJA CON DESGLOSE COMPLETO VÍA EMAILJS Y GUARDADO HISTÓRICO
     function openClosureModal() {
       const currentUser = getActiveUser();
-      const userSession = cashSessions[currentUser] || { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: 1 };
+      const userSession = cashSessions[currentUser] || { initialCash: 0, totalIncome: 0, salesHistory: [], expenses: [], attendance: [], folio: 1 };
       const currentFolioNum = userSession.folio || 1;
-      const totalAcc = Number(userSession.totalIncome || 0);
+      
+      const rawIncome = Number(userSession.totalIncome || 0);
+      const expensesList = userSession.expenses || [];
+      const totalExpenses = expensesList.reduce((sum, e) => sum + Number(e.amount), 0);
+      const netCash = rawIncome - totalExpenses;
 
-      if (confirm(`¿Estás seguro de cerrar la caja del día (Folio #${currentFolioNum})?\n\nAtendido por: ${currentUser.toUpperCase()}\nTotal acumulado: $${totalAcc.toFixed(2)}\n\nEsto enviará el reporte a tu correo y aumentará el folio en 1 para el siguiente turno.`)) {
+      if (confirm(`¿Estás seguro de cerrar la caja del día (Folio #${currentFolioNum})?\n\nAtendido por: ${currentUser.toUpperCase()}\nVentas Totales: $${rawIncome.toFixed(2)}\nGastos Retirados: -$${totalExpenses.toFixed(2)}\nEfectivo Neto a Entregar: $${netCash.toFixed(2)}\n\nEsto enviará el reporte a tu correo, guardará el histórico en Firebase y aumentará el folio en 1 para el siguiente turno.`)) {
         
         const attendanceList = userSession.attendance || [];
         const lastAttendance = attendanceList.length > 0 ? attendanceList[attendanceList.length - 1] : null;
@@ -1548,18 +2315,38 @@
         const closeTimeVal = new Date().toLocaleString();
         const userSalesHistory = userSession.salesHistory || [];
 
-        let formattedSummary = "Sin ventas registradas en este turno.";
+        // Texto plano limpio para EmailJS (sin HTML crudo)
+        let formattedSummaryText = "Sin ventas registradas en este turno.";
         if (userSalesHistory.length > 0) {
-          formattedSummary = userSalesHistory.map(s => {
+          formattedSummaryText = userSalesHistory.map(s => {
             if (!s.items || s.items.length === 0) return '';
-            return s.items.map(i => `
-              <div style="display: flex; justify-content: space-between; padding: 10px 14px; margin-bottom: 6px; background-color: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; font-family: 'Segoe UI', Tahoma, sans-serif;">
-                <span style="color: #2d3748; font-weight: 600; font-size: 14px;">🔹 ${i.name}</span>
-                <span style="color: #28a745; font-weight: bold; font-size: 14px;">$${Number(i.price).toFixed(2)}</span>
-              </div>
-            `).join('');
-          }).join('');
+            return s.items.map(i => ` • ${i.name}: $${Number(i.price).toFixed(2)}`).join('\n');
+          }).join('\n');
         }
+
+        let formattedExpensesText = "No hubo retiros ni gastos en este turno.";
+        if (expensesList.length > 0) {
+          formattedExpensesText = expensesList.map(e => ` • ${e.reason} (${e.date}): -$${Number(e.amount).toFixed(2)}`).join('\n');
+        }
+
+        // Guardar Cierre en la base de datos de Firebase
+        const closureRecord = {
+          id: Date.now(),
+          folio: currentFolioNum,
+          date: new Date().toLocaleDateString(),
+          user: currentUser.toUpperCase(),
+          initialCash: initialCashVal,
+          rawIncome: rawIncome,
+          totalExpenses: totalExpenses,
+          netCash: netCash,
+          openTime: openTimeVal,
+          closeTime: closeTimeVal,
+          salesHistory: userSalesHistory,
+          expenses: expensesList
+        };
+
+        historicalClosures.push(closureRecord);
+        db.ref('maki_app/historical_closures').set(historicalClosures);
 
         const templateParams = {
           email: "hervinguillen8@gmail.com",
@@ -1569,13 +2356,13 @@
           closeTime: closeTimeVal,
           initialCash: initialCashVal,
           folio: currentFolioNum,
-          summaryText: formattedSummary,
-          totalIncome: totalAcc.toFixed(2)
+          summaryText: `VENTAS:\n${formattedSummaryText}\n\n----------------------------------------\nGASTOS RETIRADOS:\n${formattedExpensesText}`,
+          totalIncome: netCash.toFixed(2)
         };
 
         const resetSessionAndPromptLogin = () => {
           const nextFolio = currentFolioNum + 1;
-          cashSessions[currentUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], attendance: [], folio: nextFolio };
+          cashSessions[currentUser] = { initialCash: 0, totalIncome: 0, salesHistory: [], expenses: [], attendance: [], folio: nextFolio };
           syncUserSession(currentUser);
 
           localStorage.removeItem('maki_active_user');
@@ -1591,7 +2378,7 @@
 
         emailjs.send("default_service", "template_iy8j3e2", templateParams)
           .then((response) => {
-             alert('🔒 Caja cerrada exitosamente. ¡El reporte con el detalle de ventas ha sido enviado a tu Gmail!');
+             alert('🔒 Caja cerrada exitosamente. ¡El reporte completo ha sido enviado a tu Gmail y guardado en el historial de Administrador!');
              resetSessionAndPromptLogin();
           }, (error) => {
              alert('⚠️ Error al enviar el correo con EmailJS: ' + JSON.stringify(error));
