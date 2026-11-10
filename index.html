@@ -1260,7 +1260,11 @@
     }
 
     function syncCredits() {
-      db.ref('maki_app/credits').set(credits);
+      const creditsObj = {};
+      credits.forEach((c, index) => {
+        creditsObj['c_' + (c.id || index)] = c;
+      });
+      db.ref('maki_app/credits').set(creditsObj);
     }
 
     function syncUserSession(username) {
@@ -1292,7 +1296,16 @@
           }
         }
 
-        credits = data.credits || [];
+        const remoteCredits = data.credits || {};
+        credits = [];
+        if (Array.isArray(remoteCredits)) {
+          credits = remoteCredits;
+        } else {
+          for (let key in remoteCredits) {
+            credits.push(remoteCredits[key]);
+          }
+        }
+
         historicalClosures = data.historical_closures || [];
       } else {
         products = defaultProducts;
